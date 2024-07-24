@@ -4,10 +4,10 @@ import json
 import time
 from datetime import datetime, timedelta
 from prover_cli.prometheus import test_prometheus_connection, fetch_prometheus_metrics
-from prover_cli.proof_processor import execute_task, process_proof, log_metrics_to_csv, log_error
+from prover_cli.proof_processor import execute_task, process_proof, validate_and_extract_proof, log_metrics_to_csv, log_error
 from prover_cli.setup_environment import setup_environment
 
-BUFFER_WAIT_TIME = 20  # Define BUFFER_WAIT_TIME here or import from a common config
+BUFFER_WAIT_TIME = 20
 
 def run_proofs(begin_block, end_block, witness_dir, previous_proof):
     test_prometheus_connection()
@@ -51,7 +51,6 @@ def run_proofs(begin_block, end_block, witness_dir, previous_proof):
         # Cool-down period
         time.sleep(BUFFER_WAIT_TIME)
 
-
 def validate_proof(input_file, output_file):
     try:
         proof_file = process_proof(input_file)
@@ -65,7 +64,6 @@ def validate_proof(input_file, output_file):
             print(f"Failed to validate and extract proof from {input_file}")
     except Exception as e:
         print(f"Failed to validate and extract proof: {e}")
-
 
 def main():
     parser = argparse.ArgumentParser(description='Prover CLI')
@@ -87,7 +85,6 @@ def main():
         run_proofs(args.begin_block, args.end_block, args.witness_dir, args.previous_proof)
     elif args.command == 'validate':
         validate_proof(args.input_file, args.output_file)
-
 
 if __name__ == "__main__":
     main()
