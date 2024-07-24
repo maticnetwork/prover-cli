@@ -1,9 +1,10 @@
 import subprocess
 import os
+import json
 
 def execute_task(witness_file, previous_proof=None):
-    output_file = witness_file.replace('/tmp/witnesses/', '/tmp/proofs/proof-').replace('.witness.json', '.leader.out')
-    
+    output_file = witness_file.replace('.witness.json', '.leader.out')
+
     if previous_proof:
         command = f"""
         env RUST_BACKTRACE=full RUST_LOG=debug leader --runtime=amqp --amqp-uri=amqp://guest:guest@test-rabbitmq-cluster.zero.svc.cluster.local:5672 stdio --previous-proof {previous_proof} < {witness_file} | tee {output_file}
@@ -12,7 +13,7 @@ def execute_task(witness_file, previous_proof=None):
         command = f"""
         env RUST_BACKTRACE=full RUST_LOG=debug leader --runtime=amqp --amqp-uri=amqp://guest:guest@test-rabbitmq-cluster.zero.svc.cluster.local:5672 stdio < {witness_file} | tee {output_file}
         """
-    
+
     print(f"Executing command: {command}")
 
     try:
@@ -24,41 +25,31 @@ def execute_task(witness_file, previous_proof=None):
         print(f"Command failed with error: {e.stderr}")
         return None, e.stderr
 
-def validate_and_extract_proof(witness_file):
-    proof_file = witness_file.replace('.witness.json', '.witness.json.proof')
-    output_file = witness_file.replace('/tmp/witnesses/', '/tmp/proofs/proof-').replace('.witness.json', '.leader.out')
-    
+def process_proof(witness_file):
+    output_file = witness_file.replace('.witness.json', '.leader.out')
+    proof_file = witness_file.replace('.witness.json', '.proof.json')
+
     try:
         with open(output_file, 'r') as f:
             lines = f.readlines()
-        json_start_index = None
-        for i, line in enumerate(lines):
-            if line.startswith('['):
-                json_start_index = i
-                break
-        if json_start_index is not None:
-            json_content = ''.join(lines[json_start_index:])
-        else:
-            raise ValueError("No JSON content found in the output file.")
-        
-        proof = subprocess.run(
-            ['jq', '.[0]'],
-            input=json_content,
-            text=True,
-            capture_output=True,
-            check=True
-        ).stdout
-        
-        with open(proof_file, 'w') as f:
-            f.write(proof)
-        
+            json_content = ''.join(lines[3:])
+            json.loads(json_content)  # Validate JSON format
+            with open(proof_file, 'w') as proof_f:
+                proof_f.write(json_content)
         return proof_file
-    except Exception as e:
+    except (json.JSONDecodeError, IndexError, FileNotFoundError) as e:
         print(f"Failed to process proof: {e}")
         return None
 
-def log_error(witness_file, error_log):
-    starting_block = os.path.basename(witness_file).replace('.witness.json', '')
-    with open(f'error_{starting_block}.log', mode='w') as file:
-        file.write(error_log)
+def validate_and_extract_proof(json_content):
+    try:
+        proof = json.loads(json_content)
+        if isinstance(proof, list) and proof:
+            return json.dumps(proof[0], indent=2)
+        else:
+            print("Invalid proof format.")
+            return None
+    except json.JSONDecodeError as e:
+        print(f"Failed to validate and extract proof: {e}")
+        return None
 

@@ -2,6 +2,11 @@ import argparse
 from prover_cli.prometheus import test_prometheus_connection, fetch_prometheus_metrics
 from prover_cli.proof_processor import execute_task, process_proof, validate_and_extract_proof
 from prover_cli.setup_environment import setup_environment
+import os
+from datetime import datetime, timedelta
+import time
+
+BUFFER_WAIT_TIME = 20  # buffer time before, after task, and time to wait after task completion for metrics to land
 
 def main():
     parser = argparse.ArgumentParser(description='Run block proving tasks and collect performance metrics.')
@@ -54,4 +59,20 @@ def run_prover(begin_block, end_block, witness_dir):
 
         # Cool-down period
         time.sleep(BUFFER_WAIT_TIME)
+
+def log_metrics_to_csv(witness_file, metrics):
+    starting_block = os.path.basename(witness_file).replace('.witness.json', '')
+    with open('metrics.csv', mode='a', newline='') as file:
+        writer = csv.writer(file)
+        for metric_name, metric_data in metrics:
+            row = [starting_block, datetime.now(), metric_name]
+            for metric in metric_data:
+                values = [value[1] for value in metric['values']]
+                row.extend(values)
+            writer.writerow(row)
+
+def log_error(witness_file, error_log):
+    starting_block = os.path.basename(witness_file).replace('.witness.json', '')
+    with open(f'error_{starting_block}.log', mode='w') as file:
+        file.write(error_log)
 
