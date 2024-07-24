@@ -1,0 +1,3 @@
+"""
+Prover CLI package
+"""
