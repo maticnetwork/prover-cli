@@ -54,8 +54,12 @@ def validate_proof(input_file, output_file):
     
     proof = validate_and_extract_proof(raw_json)
     
-    with open(output_file, 'w') as f:
-        f.write(proof)
+    if proof is not None:
+        with open(output_file, 'w') as f:
+            f.write(proof)
+        print(f"Proof successfully validated and written to {output_file}")
+    else:
+        print(f"Failed to validate and extract proof from {input_file}")
 
 def main():
     parser = argparse.ArgumentParser(description='Prover CLI tool for processing and validating proofs.')

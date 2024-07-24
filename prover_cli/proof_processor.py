@@ -41,15 +41,19 @@ def process_proof(witness_file):
         print(f"Failed to process proof: {e}")
         return None
 
-def validate_and_extract_proof(json_content):
+def validate_and_extract_proof(raw_json):
     try:
-        proof = json.loads(json_content)
-        if isinstance(proof, list) and proof:
-            return json.dumps(proof[0], indent=2)
-        else:
-            print("Invalid proof format.")
-            return None
+        # Attempt to parse the JSON to ensure it's valid
+        parsed_json = json.loads(raw_json)
+        # Extract the relevant proof data
+        proof = parsed_json[0]  # Assuming the proof is the first element
+        return json.dumps(proof, indent=2)
     except json.JSONDecodeError as e:
-        print(f"Failed to validate and extract proof: {e}")
+        print(f"Failed to decode JSON: {e}")
         return None
-
+    except IndexError as e:
+        print(f"Failed to extract proof from JSON: {e}")
+        return None
+    except Exception as e:
+        print(f"Unexpected error: {e}")
+        return None
