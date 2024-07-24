@@ -49,6 +49,11 @@ prover-cli --begin_block 20362226 --end_block 20362237 --witness_dir /path/to/wi
 prover-cli --begin_block 20362226 --end_block 20362226 --witness_dir /path/to/witnesses --previous-proof /path/to/previous/proof.json
 
 
+# Sanitize proof from leader.out file for future processing
+
+prover-cli validate --input_file /path/to/leader.out --output_file /path/to/proof.json
+
+
 ## Review Metrics
 Performance metrics are saved in metrics.csv in the current directory. Each row contains metrics for a specific witness.
 
