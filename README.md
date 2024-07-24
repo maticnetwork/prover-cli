@@ -13,13 +13,27 @@ Prover CLI is a tool for running block proving tasks and collecting performance 
 
 ## Installation
 
-pip install -r requirements.txt
+# Clone the repository
+git clone https://github.com/rebelArtists/prover_cli.git
+
+# Navigate to your project directory
+cd prover_cli
+
+# Set up a virtual environment
+python3 -m venv venv
+source venv/bin/activate
+
+# Install the package in editable mode
+pip install -e .
+
+# Run unit tests
+python -m unittest discover -s tests
 
 
 ## Usage
 
 ## Set Up Port Forwarding
-Before running the CLI, set up port forwarding for Prometheus:
+Before running the CLI, set up port forwarding for Prometheus for metric tracking:
 
 kubectl port-forward --namespace kube-prometheus --address localhost svc/prometheus-operated 9090:9090
 
