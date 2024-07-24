@@ -6,6 +6,8 @@ import os
 import time
 from datetime import datetime, timedelta
 
+BUFFER_WAIT_TIME = 20  # buffer time before, after task, and time to wait after task completion for metrics to land
+
 def run_proofs(begin_block, end_block, witness_dir, previous_proof=None):
     setup_environment()
 
