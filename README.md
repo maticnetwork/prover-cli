@@ -5,9 +5,8 @@ Prover CLI is a tool for running block proving tasks and collecting performance 
 
 ## Prerequisites
 
-- Python 3.x
-- jq 1.7 or higher
-- Prometheus set up and running
+- Python 3.6+
+- Prometheus set up and running on your service
 - Witness files generated using Jerigon
 
 
@@ -35,13 +34,19 @@ python -m unittest discover -s tests
 ## Set Up Port Forwarding
 Before running the CLI, set up port forwarding for Prometheus for metric tracking:
 
-kubectl port-forward --namespace kube-prometheus --address localhost svc/prometheus-operated 9090:9090
+nohup kubectl port-forward --namespace kube-prometheus --address localhost svc/prometheus-operated 9090:9090 &
 
 
 ## Run the CLI
-To run the CLI tool:
 
-prover-cli --begin_block 20362226 --end_block 20362237 --witness_dir /tmp/witnesses
+# Process a Range of Witnesses
+
+prover-cli --begin_block 20362226 --end_block 20362237 --witness_dir /path/to/witnesses
+
+
+# Process a Single Witness with a Previous Proof
+
+prover-cli --begin_block 20362226 --end_block 20362226 --witness_dir /path/to/witnesses --previous-proof /path/to/previous/proof.json
 
 
 ## Review Metrics
