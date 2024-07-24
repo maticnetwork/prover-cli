@@ -1,29 +1,34 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 
-def read_metrics(csv_file):
-    return pd.read_csv(csv_file)
-
 def plot_metrics(data, metric_name, block_number):
-    subset = data[(data['block_number'] == block_number) & (data['metric_name'] == metric_name)]
-    timestamps = pd.to_datetime(subset['timestamp'])
-    values = subset.drop(['block_number', 'timestamp', 'metric_name'], axis=1).values.flatten()
-
+    subset = data[(data['begin_block'] == block_number) & (data['metric_name'] == metric_name)]
+    if subset.empty:
+        print(f"No data found for block {block_number} and metric {metric_name}")
+        return
+    
     plt.figure(figsize=(10, 6))
-    plt.plot(timestamps, values, marker='o', linestyle='-')
-    plt.title(f'{metric_name} for block {block_number}')
+    for column in subset.columns[3:]:  # Skip the first three columns: begin_block, timestamp, metric_name
+        plt.plot(subset['timestamp'], subset[column], label=column)
     plt.xlabel('Timestamp')
     plt.ylabel(metric_name)
-    plt.grid(True)
+    plt.title(f"{metric_name} over time for block {block_number}")
+    plt.legend()
     plt.show()
 
-def detect_anomalies(data, metric_name, threshold):
-    anomalies = data[(data['metric_name'] == metric_name) & (data.iloc[:, 3:].max(axis=1) > threshold)]
-    return anomalies
-
 def plot_and_analyze(csv_file, metric_name, block_number, threshold):
-    data = read_metrics(csv_file)
+    data = pd.read_csv(csv_file)
+    
     plot_metrics(data, metric_name, block_number)
-    anomalies = detect_anomalies(data, metric_name, threshold)
-    print(f'Anomalies detected for {metric_name} above threshold {threshold}:\n', anomalies)
+    
+    subset = data[(data['begin_block'] == block_number) & (data['metric_name'] == metric_name)]
+    if not subset.empty:
+        anomalies = subset[subset.max(axis=1) > threshold]
+        if not anomalies.empty:
+            print("Anomalies detected:")
+            print(anomalies)
+        else:
+            print("No anomalies detected above the threshold.")
+    else:
+        print(f"No data found for block {block_number} and metric {metric_name}")
 
