@@ -80,20 +80,4 @@ def main():
     validate_parser.add_argument('--input_file', type=str, required=True, help='Path to the input leader.out file.')
     validate_parser.add_argument('--output_file', type=str, required=True, help='Path to the output proof file.')
 
-    plot_parser = subparsers.add_parser('plot', help='Plot and analyze metrics from CSV file')
-    plot_parser.add_argument('--csv_file', type=str, required=True, help='Path to the CSV file.')
-    plot_parser.add_argument('--metric_name', type=str, required=True, help='Name of the metric to plot.')
-    plot_parser.add_argument('--block_number', type=int, required=True, help='Block number to plot.')
-    plot_parser.add_argument('--threshold', type=float, required=True, help='Threshold for anomaly detection.')
-
-    args = parser.parse_args()
-
-    if args.command == 'run':
-        run_proofs(args.begin_block, args.end_block, args.witness_dir, args.previous_proof)
-    elif args.command == 'validate':
-        validate_proof(args.input_file, args.output_file)
-    elif args.command == 'plot':
-        plot_and_analyze(args.csv_file, args.metric_name, args.block_number, args.threshold)
-
-if __name__ == "__main__":
-    main()
+    plot_parser
