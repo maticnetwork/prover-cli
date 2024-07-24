@@ -43,27 +43,21 @@ def process_proof(witness_file):
 
 def validate_and_extract_proof(raw_json):
     try:
-        # Clean the raw JSON by extracting valid JSON content starting from the first valid character
-        json_start = raw_json.find('[')  # Assuming JSON array starts with '['
-        if json_start == -1:
-            raise ValueError("No JSON array found in the input file.")
-        cleaned_json = raw_json[json_start:]
+        # Use shell command to process the proof
+        result = subprocess.run(
+            f'echo "{raw_json.strip()}" | tail -n1 | jq \'.[0]\'',
+            shell=True,
+            capture_output=True,
+            text=True
+        )
         
-        # Attempt to parse the JSON to ensure it's valid
-        parsed_json = json.loads(cleaned_json)
+        if result.returncode != 0:
+            print(f"Failed to process proof: {result.stderr}")
+            return None
         
-        # Extract the relevant proof data
-        proof = parsed_json[0]  # Assuming the proof is the first element
-        return json.dumps(proof, indent=2)
-    except json.JSONDecodeError as e:
-        print(f"Failed to decode JSON: {e}")
+        return result.stdout.strip()
+    except subprocess.CalledProcessError as e:
+        print(f"Command failed with error: {e.stderr}")
         return None
-    except IndexError as e:
-        print(f"Failed to extract proof from JSON: {e}")
-        return None
-    except ValueError as e:
-        print(f"Error in input data: {e}")
-        return None
-    except Exception as e:
-        print(f"Unexpected error: {e}")
-        return None
+
+
