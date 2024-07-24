@@ -1,6 +1,7 @@
 import subprocess
 import os
 import json
+import tempfile
 
 def execute_task(witness_file, previous_proof=None):
     output_file = witness_file.replace('.witness.json', '.leader.out')
@@ -43,21 +44,25 @@ def process_proof(witness_file):
 
 def validate_and_extract_proof(raw_json):
     try:
+        with tempfile.NamedTemporaryFile(delete=False, mode='w', suffix='.json') as temp_input:
+            temp_input.write(raw_json)
+            temp_input_path = temp_input.name
+
+        temp_output_path = temp_input_path + ".proof"
+
         # Use shell command to process the proof
-        result = subprocess.run(
-            f'echo "{raw_json.strip()}" | tail -n1 | jq \'.[0]\'',
-            shell=True,
-            capture_output=True,
-            text=True
-        )
-        
+        command = f'tail -n1 {temp_input_path} | jq \'.[0]\' > {temp_output_path}'
+        result = subprocess.run(['sh', '-c', command], capture_output=True, text=True)
+
         if result.returncode != 0:
             print(f"Failed to process proof: {result.stderr}")
             return None
         
-        return result.stdout.strip()
+        with open(temp_output_path, 'r') as temp_output:
+            proof = temp_output.read().strip()
+
+        return proof
     except subprocess.CalledProcessError as e:
         print(f"Command failed with error: {e.stderr}")
         return None
-
 
