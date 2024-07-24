@@ -5,9 +5,7 @@ from datetime import datetime
 from urllib.parse import urlencode
 import requests
 
-BUFFER_WAIT_TIME = 20  # Define BUFFER_WAIT_TIME here or import from a common config
 PROMETHEUS_URL = 'http://localhost:9090/api/v1/query_range'
-
 
 def execute_task(witness_file, previous_proof=None):
     output_file = witness_file.replace('.witness.json', '.leader.out')

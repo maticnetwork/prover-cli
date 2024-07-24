@@ -6,6 +6,7 @@ from prover_cli.prometheus import test_prometheus_connection, fetch_prometheus_m
 from prover_cli.proof_processor import execute_task, process_proof, log_metrics_to_csv, log_error
 from prover_cli.setup_environment import setup_environment
 
+BUFFER_WAIT_TIME = 20  # Define BUFFER_WAIT_TIME here or import from a common config
 
 def run_proofs(begin_block, end_block, witness_dir, previous_proof):
     test_prometheus_connection()
