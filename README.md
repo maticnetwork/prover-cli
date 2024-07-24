@@ -41,12 +41,12 @@ nohup kubectl port-forward --namespace kube-prometheus --address localhost svc/p
 
 # Process a Range of Witnesses
 
-prover-cli --begin_block 20362226 --end_block 20362237 --witness_dir /path/to/witnesses
+prover-cli run --begin_block 123 --end_block 123 --witness_dir /tmp/witnesses
 
 
 # Process a Single Witness with a Previous Proof
 
-prover-cli --begin_block 20362226 --end_block 20362226 --witness_dir /path/to/witnesses --previous-proof /path/to/previous/proof.json
+prover-cli run --begin_block 20362226 --end_block 20362226 --witness_dir /path/to/witnesses --previous-proof /path/to/previous/proof.json
 
 
 # Output cleaned proof from leader.out file for future processing
