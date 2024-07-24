@@ -5,17 +5,26 @@ from prover_cli.setup_environment import setup_environment
 import os
 from datetime import datetime, timedelta
 import time
+import csv
 
 BUFFER_WAIT_TIME = 20  # buffer time before, after task, and time to wait after task completion for metrics to land
 
 def main():
-    parser = argparse.ArgumentParser(description='Run block proving tasks and collect performance metrics.')
-    parser.add_argument('--begin_block', type=int, required=True, help='Beginning block number.')
-    parser.add_argument('--end_block', type=int, required=True, help='Ending block number.')
-    parser.add_argument('--witness_dir', type=str, required=True, help='Directory where witness files are stored.')
+    parser = argparse.ArgumentParser(description='Prover CLI')
+    subparsers = parser.add_subparsers(dest='command')
+
+    # Create the parser for the "run" command
+    parser_run = subparsers.add_parser('run', help='Run block proving tasks and collect performance metrics')
+    parser_run.add_argument('--begin_block', type=int, required=True, help='Beginning block number.')
+    parser_run.add_argument('--end_block', type=int, required=True, help='Ending block number.')
+    parser_run.add_argument('--witness_dir', type=str, required=True, help='Directory where witness files are stored.')
 
     args = parser.parse_args()
-    run_prover(args.begin_block, args.end_block, args.witness_dir)
+
+    if args.command == 'run':
+        run_prover(args.begin_block, args.end_block, args.witness_dir)
+    else:
+        parser.print_help()
 
 def run_prover(begin_block, end_block, witness_dir):
     test_prometheus_connection()
@@ -75,4 +84,7 @@ def log_error(witness_file, error_log):
     starting_block = os.path.basename(witness_file).replace('.witness.json', '')
     with open(f'error_{starting_block}.log', mode='w') as file:
         file.write(error_log)
+
+if __name__ == "__main__":
+    main()
 
