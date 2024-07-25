@@ -5,8 +5,16 @@ import json
 def parse_witness_file(witness_file):
     with open(witness_file, 'r') as f:
         witness_data = json.load(f)
-    num_transactions = len(witness_data.get('transactions', []))
-    withdrawals = len(witness_data.get('withdrawals', []))
+
+    # Extract the necessary information
+    if isinstance(witness_data, list) and len(witness_data) > 0:
+        data = witness_data[0]
+        num_transactions = len(data.get('transactions', []))
+        withdrawals = len(data.get('withdrawals', []))
+    else:
+        num_transactions = 0
+        withdrawals = 0
+
     return num_transactions, withdrawals
 
 def generate_report(csv_file, witness_dir, durations):
