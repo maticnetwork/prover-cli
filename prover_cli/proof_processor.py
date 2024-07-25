@@ -36,7 +36,7 @@ def process_proof(witness_file):
         result = subprocess.run(['sh', '-c', command], capture_output=True, text=True)
         if result.returncode != 0:
             print(f"Failed to process proof: {result.stderr}")
-            return None, None
+            return None
         else:
             proof_json = json.loads(result.stdout)
             with open(proof_file, 'w') as pf:
@@ -58,8 +58,9 @@ def log_metrics_to_csv(witness_file, metrics):
             # Write headers if file does not exist
             writer.writerow(['block_number', 'timestamp', 'metric_name', 'values'])
         for metric_name, metric_data in metrics:
-            row = [starting_block, datetime.now(), metric_name, [value[1] for value in metric['values']]]
-            writer.writerow(row)
+            for metric in metric_data:
+                row = [starting_block, datetime.now(), metric_name, [value[1] for value in metric['values']]]
+                writer.writerow(row)
 
 def log_error(witness_file, error_log):
     starting_block = os.path.basename(witness_file).replace('.witness.json', '')
