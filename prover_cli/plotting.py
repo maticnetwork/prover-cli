@@ -6,29 +6,38 @@ def plot_metrics(data, metric_name, block_number):
     if subset.empty:
         print(f"No data found for block {block_number} and metric {metric_name}")
         return
-    
+
+    values = subset.iloc[0]['values']
+    if isinstance(values, str):
+        values = values.strip('[]').split(', ')
+
+    values = [float(value) for value in values]
+
     plt.figure(figsize=(10, 6))
-    for column in subset.columns[3:]:  # Skip the first three columns: block_number, timestamp, metric_name
-        plt.plot(subset['timestamp'], subset[column], label=column)
-    plt.xlabel('Timestamp')
+    plt.plot(values, marker='o')
+    plt.title(f'Metric: {metric_name} for Block: {block_number}')
+    plt.xlabel('Time')
     plt.ylabel(metric_name)
-    plt.title(f"{metric_name} over time for block {block_number}")
-    plt.legend()
+    plt.grid(True)
     plt.show()
 
 def plot_and_analyze(csv_file, metric_name, block_number, threshold):
-    headers = ['block_number', 'timestamp', 'metric_name'] + [f'metric_{i}' for i in range(1, 100)]  # Adjust range as needed
-    data = pd.read_csv(csv_file, header=None, names=headers)
-    
+    headers = ['block_number', 'timestamp', 'metric_name', 'values']
+    data = pd.read_csv(csv_file, header=0, names=headers)
+
     plot_metrics(data, metric_name, block_number)
-    
+
     subset = data[(data['block_number'] == block_number) & (data['metric_name'] == metric_name)]
     if not subset.empty:
-        anomalies = subset[subset.iloc[:, 3:].max(axis=1) > threshold]  # Check columns from the 4th onwards for threshold
-        if not anomalies.empty:
-            print("Anomalies detected:")
-            print(anomalies)
+        values = subset.iloc[0]['values']
+        if isinstance(values, str):
+            values = values.strip('[]').split(', ')
+        values = [float(value) for value in values]
+        
+        spikes = [value for value in values if value > threshold]
+        if spikes:
+            print(f"Spike detected in metric {metric_name} for block {block_number}: {spikes}")
         else:
-            print("No anomalies detected above the threshold.")
+            print(f"No spikes detected in metric {metric_name} for block {block_number}.")
     else:
         print(f"No data found for block {block_number} and metric {metric_name}")
