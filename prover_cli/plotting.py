@@ -3,7 +3,11 @@ import pandas as pd
 
 def plot_metrics(data, metric_name, block_number):
     print("Data for plotting:", data)  # Debug statement
+    print(f"Filtering for block_number: {block_number}, metric_name: {metric_name}")  # Debug statement
+    
+    data['block_number'] = data['block_number'].astype(str)
     subset = data[(data['block_number'] == str(block_number)) & (data['metric_name'] == metric_name)]
+    
     if subset.empty:
         print(f"No data found for block {block_number} and metric {metric_name}")
         return
@@ -11,7 +15,7 @@ def plot_metrics(data, metric_name, block_number):
     for index, row in subset.iterrows():
         values = row['values']
         try:
-            values = [float(value.strip()) for value in values.strip('[]').split(',')]
+            values = [float(value.strip().strip("'")) for value in values.strip('[]').split(',')]
         except ValueError as e:
             print(f"Failed to convert values to float: {e}")
             continue
