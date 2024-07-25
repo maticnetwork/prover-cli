@@ -53,9 +53,9 @@ def generate_report(csv_file, witness_dir):
 
             for _, row in block_data.iterrows():
                 if row['metric_name'] == 'memory_usage':
-                    max_memory = max(max_memory, max(eval(row['values'])))
+                    max_memory = max(max_memory, max(map(float, eval(row['values']))))
                 if row['metric_name'] == 'cpu_usage':
-                    max_cpu = max(max_cpu, max(eval(row['values'])))
+                    max_cpu = max(max_cpu, max(map(float, eval(row['values']))))
 
             cost_per_proof = time_taken * 0.0123  # Placeholder cost calculation
 
