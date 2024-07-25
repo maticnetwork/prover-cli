@@ -21,7 +21,8 @@ def execute_task(witness_file, previous_proof=None):
     try:
         result = subprocess.run(['sh', '-c', command], capture_output=True, text=True)
         print(f"Command output: {result.stdout}")
-        print(f"Command error: {result.stderr}")
+        if result.stderr:
+            print(f"Command error: {result.stderr}")
         return result.stdout, result.stderr if result.stderr else None
     except subprocess.CalledProcessError as e:
         print(f"Command failed with error: {e.stderr}")
@@ -30,21 +31,20 @@ def execute_task(witness_file, previous_proof=None):
 def process_proof(witness_file):
     output_file = witness_file.replace('.witness.json', '.leader.out')
     proof_file = witness_file.replace('.witness.json', '.proof.json')
-    cleaned_proof_file = witness_file.replace('.witness.json', '.cleaned.proof.json')
+    command = f"tail -n1 {output_file} | jq '.'"
     try:
-        with open(output_file, 'r') as file:
-            lines = file.readlines()
-            last_line = lines[-1].strip()
-            proof_json = json.loads(last_line)
+        result = subprocess.run(['sh', '-c', command], capture_output=True, text=True)
+        if result.returncode != 0:
+            print(f"Failed to process proof: {result.stderr}")
+            return None
+        else:
+            proof_json = json.loads(result.stdout)
             with open(proof_file, 'w') as pf:
                 json.dump(proof_json, pf, indent=2)
-            # Save cleaned proof
-            with open(cleaned_proof_file, 'w') as cpf:
-                json.dump(proof_json, cpf, indent=2)
-            return proof_file, cleaned_proof_file
-    except (IndexError, json.JSONDecodeError, FileNotFoundError) as e:
+            return proof_file
+    except (subprocess.CalledProcessError, json.JSONDecodeError) as e:
         print(f"Failed to process proof: {e}")
-        return None, None
+        return None
 
 def log_metrics_to_csv(witness_file, metrics):
     starting_block = os.path.basename(witness_file).replace('.witness.json', '')
@@ -65,10 +65,10 @@ def log_error(witness_file, error_log):
 def validate_and_extract_proof(raw_json):
     try:
         # Use subprocess to process the raw JSON and extract proof
-        result = subprocess.run(['sh', '-c', f'echo \'{raw_json}\' | jq .[0]'], capture_output=True, text=True)
+        result = subprocess.run(['sh', '-c', f'echo \'{raw_json}\' | jq .'], capture_output=True, text=True)
         if result.returncode == 0:
             proof_json = json.loads(result.stdout)
-            return proof_json  # Return as a JSON object
+            return proof_json  # Return the cleaned proof
         else:
             print(f"Failed to process proof: {result.stderr}")
             return None
