@@ -60,7 +60,7 @@ def log_metrics_to_csv(witness_file, metrics, start_time, end_time):
     with open('metrics.csv', mode='a', newline='') as file:
         writer = csv.writer(file)
         for metric_name, metric_data in metrics:
-            row = [starting_block, datetime.now(), metric_name, [value[1] for value in metric['values']], start_time, end_time]
+            row = [starting_block, datetime.now(), metric_name, [value[1] for value in metric['values']], start_time.isoformat(), end_time.isoformat()]
             writer.writerow(row)
 
 def log_error(witness_file, error_log):
