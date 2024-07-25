@@ -6,7 +6,6 @@ from datetime import datetime, timedelta
 from prover_cli.prometheus import test_prometheus_connection, fetch_prometheus_metrics
 from prover_cli.proof_processor import execute_task, process_proof, validate_and_extract_proof, log_metrics_to_csv, log_error
 from prover_cli.setup_environment import setup_environment
-from prover_cli.plotting import plot_and_analyze
 
 BUFFER_WAIT_TIME = 20
 
@@ -30,7 +29,10 @@ def run_proofs(begin_block, end_block, witness_dir, previous_proof):
         # Check if command was executed successfully
         if output:
             print(f"Task with witness file {current_witness} executed successfully.")
-            previous_proof = process_proof(current_witness)
+            proof_file, cleaned_proof_file = process_proof(current_witness)
+            if cleaned_proof_file:
+                print(f"Cleaned proof saved to {cleaned_proof_file}")
+            previous_proof = cleaned_proof_file
         else:
             print(f"Task with witness file {current_witness} failed to execute.")
 
@@ -80,4 +82,21 @@ def main():
     validate_parser.add_argument('--input_file', type=str, required=True, help='Path to the input leader.out file.')
     validate_parser.add_argument('--output_file', type=str, required=True, help='Path to the output proof file.')
 
-    plot_parser
+    plot_parser = subparsers.add_parser('plot', help='Plot and analyze metrics from CSV file')
+    plot_parser.add_argument('--csv_file', type=str, required=True, help='Path to the CSV file.')
+    plot_parser.add_argument('--metric_name', type=str, required=True, help='Name of the metric to plot.')
+    plot_parser.add_argument('--block_number', type=int, required=True, help='Block number to filter.')
+    plot_parser.add_argument('--threshold', type=float, required=True, help='Threshold for anomaly detection.')
+
+    args = parser.parse_args()
+
+    if args.command == 'run':
+        run_proofs(args.begin_block, args.end_block, args.witness_dir, args.previous_proof)
+    elif args.command == 'validate':
+        validate_proof(args.input_file, args.output_file)
+    elif args.command == 'plot':
+        from prover_cli.plotting import plot_and_analyze
+        plot_and_analyze(args.csv_file, args.metric_name, args.block_number, args.threshold)
+
+if __name__ == "__main__":
+    main()

@@ -30,21 +30,21 @@ def execute_task(witness_file, previous_proof=None):
 def process_proof(witness_file):
     output_file = witness_file.replace('.witness.json', '.leader.out')
     proof_file = witness_file.replace('.witness.json', '.proof.json')
-    command = f"tail -n1 {output_file} | jq '.[0]'"
+    cleaned_proof_file = witness_file.replace('.witness.json', '.cleaned.proof.json')
     try:
-        result = subprocess.run(['sh', '-c', command], capture_output=True, text=True)
-        if result.returncode != 0:
-            print(f"Failed to process proof: {result.stderr}")
-            return None
-        else:
-            proof_json = json.loads(result.stdout)
-            proof_array = [proof_json]
+        with open(output_file, 'r') as file:
+            lines = file.readlines()
+            last_line = lines[-1].strip()
+            proof_json = json.loads(last_line)
             with open(proof_file, 'w') as pf:
-                json.dump(proof_array, pf, indent=2)
-            return proof_file
-    except (subprocess.CalledProcessError, json.JSONDecodeError) as e:
+                json.dump(proof_json, pf, indent=2)
+            # Save cleaned proof
+            with open(cleaned_proof_file, 'w') as cpf:
+                json.dump(proof_json, cpf, indent=2)
+            return proof_file, cleaned_proof_file
+    except (IndexError, json.JSONDecodeError, FileNotFoundError) as e:
         print(f"Failed to process proof: {e}")
-        return None
+        return None, None
 
 def log_metrics_to_csv(witness_file, metrics):
     starting_block = os.path.basename(witness_file).replace('.witness.json', '')
@@ -68,7 +68,7 @@ def validate_and_extract_proof(raw_json):
         result = subprocess.run(['sh', '-c', f'echo \'{raw_json}\' | jq .[0]'], capture_output=True, text=True)
         if result.returncode == 0:
             proof_json = json.loads(result.stdout)
-            return [proof_json]  # Return as an array
+            return proof_json  # Return as a JSON object
         else:
             print(f"Failed to process proof: {result.stderr}")
             return None
