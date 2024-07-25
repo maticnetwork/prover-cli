@@ -1,67 +1,90 @@
-import pandas as pd
 import json
 import os
-from datetime import datetime, timedelta
+import csv
+from datetime import datetime
+import pandas as pd
 
 def parse_witness_file(witness_file):
     with open(witness_file, 'r') as file:
         witness_data = json.load(file)
-    
-    num_transactions = len(witness_data.get('transactions', []))
-    withdrawals = len(witness_data.get('withdrawals', []))
+
+    # Assuming witness_data is a list of dictionaries
+    num_transactions = len(witness_data[0].get('transactions', []))
+    withdrawals = len(witness_data[0].get('withdrawals', []))
+
     return num_transactions, withdrawals
 
-def calculate_cost(time_taken_minutes):
-    # Average cost of t2d-64 high-mem node in GCP
-    cost_per_minute = 0.084  # Example cost, you should update it with the actual cost
-    return time_taken_minutes * cost_per_minute
+def log_metrics_to_csv(witness_file, metrics, csv_file):
+    headers = ['block_number', 'timestamp', 'metric_name', 'values']
+    starting_block = os.path.basename(witness_file).split('.')[0]
+    rows = []
+
+    for metric_name, metric in metrics.items():
+        values = [value[1] for value in metric['values']]
+        timestamp = datetime.now()
+        rows.append([starting_block, timestamp, metric_name, values])
+
+    if not os.path.exists(csv_file):
+        with open(csv_file, 'w', newline='') as file:
+            writer = csv.writer(file)
+            writer.writerow(headers)
+
+    with open(csv_file, 'a', newline='') as file:
+        writer = csv.writer(file)
+        writer.writerows(rows)
 
 def generate_report(csv_file, witness_dir):
-    # Load the CSV file
-    headers = ['block_number', 'timestamp', 'metric_name', 'values']
-    data = pd.read_csv(csv_file, header=0, names=headers)
-    
-    # Initialize a summary dictionary
-    summary = {}
+    data = pd.read_csv(csv_file)
+    report_data = []
 
-    for _, row in data.iterrows():
-        block_number = row['block_number']
-        timestamp = row['timestamp']
-        metric_name = row['metric_name']
-        values = [float(value.strip().strip("'")) for value in row['values'].strip('[]').split(',')]
+    for witness_file in os.listdir(witness_dir):
+        if witness_file.endswith('.witness.json'):
+            witness_path = os.path.join(witness_dir, witness_file)
+            block_number = os.path.basename(witness_file).split('.')[0]
 
-        if block_number not in summary:
-            witness_file = os.path.join(witness_dir, f"{block_number}.witness.json")
-            num_transactions, withdrawals = parse_witness_file(witness_file)
-            summary[block_number] = {
-                'timestamp': timestamp,
-                'num_transactions': num_transactions,
-                'time_taken': 0,  # Placeholder, will be calculated later
-                'max_memory': 0,
-                'max_cpu': 0,
-                'withdrawals': withdrawals,
-                'cost_per_proof': 0  # Placeholder, will be calculated later
-            }
-        
-        if metric_name == 'memory_usage':
-            summary[block_number]['max_memory'] = max(values)
-        elif metric_name == 'cpu_usage':
-            summary[block_number]['max_cpu'] = max(values)
-    
-    # Calculate time taken and cost per proof
-    for block_number, metrics in summary.items():
-        start_time = datetime.strptime(metrics['timestamp'], '%Y-%m-%d %H:%M:%S.%f')
-        end_time = datetime.utcnow()
-        time_taken = (end_time - start_time).total_seconds() / 60  # Convert to minutes
-        summary[block_number]['time_taken'] = time_taken
-        summary[block_number]['cost_per_proof'] = calculate_cost(time_taken)
+            # Calculate time taken (assuming it's the time to generate this witness)
+            time_taken = 0  # Placeholder for actual time calculation
+            num_transactions, withdrawals = parse_witness_file(witness_path)
 
-    # Create a DataFrame for the summary
-    summary_df = pd.DataFrame.from_dict(summary, orient='index')
-    
-    # Save the summary report to a CSV file
-    summary_csv_file = 'summary_report.csv'
-    summary_df.to_csv(summary_csv_file, index_label='witness_id')
-    print(f"Summary report saved to {summary_csv_file}")
+            block_data = data[data['block_number'] == int(block_number)]
 
-    return summary_csv_file
+            max_memory = 0
+            max_cpu = 0
+
+            for _, row in block_data.iterrows():
+                if row['metric_name'] == 'memory_usage':
+                    max_memory = max(max_memory, max(eval(row['values'])))
+                if row['metric_name'] == 'cpu_usage':
+                    max_cpu = max(max_cpu, max(eval(row['values'])))
+
+            cost_per_proof = time_taken * 0.0123  # Placeholder cost calculation
+
+            report_data.append([
+                block_number,
+                row['timestamp'],
+                num_transactions,
+                time_taken,
+                max_memory,
+                max_cpu,
+                withdrawals,
+                cost_per_proof
+            ])
+
+    report_df = pd.DataFrame(report_data, columns=[
+        'block_number', 'timestamp', 'num_transactions', 'time_taken',
+        'max_memory', 'max_cpu', 'withdrawals', 'cost_per_proof'
+    ])
+
+    report_file = os.path.join(witness_dir, 'report.csv')
+    report_df.to_csv(report_file, index=False)
+    print(f'Report generated: {report_file}')
+
+if __name__ == "__main__":
+    import argparse
+
+    parser = argparse.ArgumentParser(description="Prover CLI Report Generator")
+    parser.add_argument('--csv_file', type=str, required=True, help='CSV file with metrics data')
+    parser.add_argument('--witness_dir', type=str, required=True, help='Directory with witness files')
+
+    args = parser.parse_args()
+    generate_report(arg
