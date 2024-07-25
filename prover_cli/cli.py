@@ -1,8 +1,6 @@
-from datetime import datetime, timedelta
-import time
 import argparse
 import os
-import pandas as pd
+from datetime import datetime, timedelta
 from prover_cli.prometheus import test_prometheus_connection, fetch_prometheus_metrics
 from prover_cli.proof_processor import execute_task, process_proof, validate_and_extract_proof, log_metrics_to_csv, log_error
 from prover_cli.setup_environment import setup_environment
@@ -13,8 +11,6 @@ BUFFER_WAIT_TIME = 20
 def run_proofs(begin_block, end_block, witness_dir, previous_proof):
     test_prometheus_connection()
     setup_environment()
-
-    durations = {}  # Dictionary to store durations for each block
 
     for current_block in range(begin_block, end_block + 1):
         current_witness = os.path.join(witness_dir, f"{current_block}.witness.json")
@@ -47,15 +43,27 @@ def run_proofs(begin_block, end_block, witness_dir, previous_proof):
         if error:
             log_error(current_witness, error)
 
-        # Store the duration for the current block
-        durations[current_block] = duration
-
         print(f"Completed task with witness file {current_witness}")
 
         # Cool-down period
         time.sleep(BUFFER_WAIT_TIME)
 
-    return durations
+        # Return the duration for report generation
+        return duration
+
+def validate_proof(input_file, output_file):
+    try:
+        proof_file = process_proof(input_file)
+        if proof_file:
+            with open(proof_file, 'r') as pf:
+                proof = json.load(pf)
+            with open(output_file, 'w') as f:
+                json.dump(proof, f, indent=2)
+            print(f"Extracted proof: {proof}")
+        else:
+            print(f"Failed to validate and extract proof from {input_file}")
+    except Exception as e:
+        print(f"Failed to validate and extract proof: {e}")
 
 def main():
     parser = argparse.ArgumentParser(description='Prover CLI')
@@ -71,19 +79,27 @@ def main():
     validate_parser.add_argument('--input_file', type=str, required=True, help='Path to the input leader.out file.')
     validate_parser.add_argument('--output_file', type=str, required=True, help='Path to the output proof file.')
 
-    report_parser = subparsers.add_parser('report', help='Generate a metrics summary report')
-    report_parser.add_argument('--csv_file', type=str, required=True, help='CSV file with metrics data')
-    report_parser.add_argument('--witness_dir', type=str, required=True, help='Directory containing witness files')
+    plot_parser = subparsers.add_parser('plot', help='Plot and analyze metrics from a CSV file')
+    plot_parser.add_argument('--csv_file', type=str, required=True, help='Path to the CSV file containing metrics.')
+    plot_parser.add_argument('--metric_name', type=str, required=True, help='Metric name to plot.')
+    plot_parser.add_argument('--block_number', type=int, required=True, help='Block number to filter.')
+    plot_parser.add_argument('--threshold', type=float, required=True, help='Threshold for anomaly detection.')
+
+    report_parser = subparsers.add_parser('report', help='Generate a report from metrics and witness files')
+    report_parser.add_argument('--csv_file', type=str, required=True, help='Path to the CSV file containing metrics.')
+    report_parser.add_argument('--witness_dir', type=str, required=True, help='Directory containing witness files.')
 
     args = parser.parse_args()
 
     if args.command == 'run':
-        durations = run_proofs(args.begin_block, args.end_block, args.witness_dir, args.previous_proof)
-        generate_report(args.csv_file, args.witness_dir, durations)
+        duration = run_proofs(args.begin_block, args.end_block, args.witness_dir, args.previous_proof)
+        print(f"Duration: {duration} seconds")
     elif args.command == 'validate':
         validate_proof(args.input_file, args.output_file)
+    elif args.command == 'plot':
+        plot_and_analyze(args.csv_file, args.metric_name, args.block_number, args.threshold)
     elif args.command == 'report':
-        generate_report(args.csv_file, args.witness_dir, None)
+        generate_report(args.csv_file, args.witness_dir, duration)
 
 if __name__ == "__main__":
     main()
