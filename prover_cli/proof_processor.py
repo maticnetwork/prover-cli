@@ -69,7 +69,6 @@ def log_metrics_to_csv(witness_file, metrics):
                 'metric_name': metric_name,
                 'values': values
             }
-            print(f"Logging row: {row}")  # Debug statement
             writer.writerow(row)
 
 def log_error(witness_file, error_log):
