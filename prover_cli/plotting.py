@@ -27,7 +27,11 @@ def plot_metrics(data, metric_name, block_number, threshold):
     plt.ylabel(metric_name)
     plt.title(f"{metric_name} over Time for Block {block_number}")
     plt.legend()
-    plt.show()
+
+    # Save the plot as an image
+    output_file = f"plot_{metric_name}_{block_number}.png"
+    plt.savefig(output_file)
+    print(f"Plot saved to {output_file}")
 
 def plot_and_analyze(csv_file, metric_name, block_number, threshold):
     headers = ['block_number', 'timestamp', 'metric_name', 'values']
