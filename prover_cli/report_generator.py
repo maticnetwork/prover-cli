@@ -87,4 +87,4 @@ if __name__ == "__main__":
     parser.add_argument('--witness_dir', type=str, required=True, help='Directory with witness files')
 
     args = parser.parse_args()
-    generate_report(arg
+    generate_report(args.csv_file, args.witness_dir)
