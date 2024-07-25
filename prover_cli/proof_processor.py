@@ -18,74 +18,18 @@ def execute_task(witness_file, previous_proof=None):
     
     print(f"Executing command: {command}")
 
+    start_time = datetime.utcnow()
+
     try:
         result = subprocess.run(['sh', '-c', command], capture_output=True, text=True)
+        end_time = datetime.utcnow()
+        duration = (end_time - start_time).total_seconds()
+
         print(f"Command output: {result.stdout}")
         if result.stderr:
             print(f"Command error: {result.stderr}")
-        return result.stdout, result.stderr if result.stderr else None
+
+        return result.stdout, result.stderr if result.stderr else None, duration
     except subprocess.CalledProcessError as e:
         print(f"Command failed with error: {e.stderr}")
-        return None, e.stderr
-
-def process_proof(witness_file):
-    output_file = witness_file.replace('.witness.json', '.leader.out')
-    proof_file = witness_file.replace('.witness.json', '.proof.json')
-    command = f"tail -n1 {output_file} | jq '.'"
-    try:
-        result = subprocess.run(['sh', '-c', command], capture_output=True, text=True)
-        if result.returncode != 0:
-            print(f"Failed to process proof: {result.stderr}")
-            return None
-        else:
-            proof_json = json.loads(result.stdout)
-            with open(proof_file, 'w') as pf:
-                json.dump(proof_json, pf, indent=2)
-            cleaned_proof_file = witness_file.replace('.witness.json', '.cleaned.proof.json')
-            with open(cleaned_proof_file, 'w') as cpf:
-                json.dump(proof_json, cpf, indent=2)
-            return proof_file, cleaned_proof_file
-    except (subprocess.CalledProcessError, json.JSONDecodeError) as e:
-        print(f"Failed to process proof: {e}")
-        return None, None
-
-def log_metrics_to_csv(witness_file, metrics):
-    starting_block = os.path.basename(witness_file).replace('.witness.json', '')
-    csv_file = 'metrics.csv'
-    fieldnames = ['block_number', 'timestamp', 'metric_name', 'values']
-    
-    if not os.path.exists(csv_file):
-        with open(csv_file, mode='w', newline='') as file:
-            writer = csv.DictWriter(file, fieldnames=fieldnames)
-            writer.writeheader()
-    
-    with open(csv_file, mode='a', newline='') as file:
-        writer = csv.DictWriter(file, fieldnames=fieldnames)
-        for metric_name, metric_data in metrics.items():
-            values = [value[1] for value in metric_data]
-            row = {
-                'block_number': starting_block,
-                'timestamp': datetime.now(),
-                'metric_name': metric_name,
-                'values': values
-            }
-            writer.writerow(row)
-
-def log_error(witness_file, error_log):
-    starting_block = os.path.basename(witness_file).replace('.witness.json', '')
-    with open(f'error_{starting_block}.log', mode='w') as file:
-        file.write(error_log)
-
-def validate_and_extract_proof(raw_json):
-    try:
-        # Use subprocess to process the raw JSON and extract proof
-        result = subprocess.run(['sh', '-c', f'echo \'{raw_json}\' | jq .'], capture_output=True, text=True)
-        if result.returncode == 0:
-            proof_json = json.loads(result.stdout)
-            return proof_json
-        else:
-            print(f"Failed to process proof: {result.stderr}")
-            return None
-    except (json.JSONDecodeError, KeyError, IndexError) as e:
-        print(f"Failed to decode JSON: {e}")
-        return None
+        return None, e.stderr, 0
