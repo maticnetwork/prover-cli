@@ -51,21 +51,26 @@ def process_proof(witness_file):
 
 def log_metrics_to_csv(witness_file, metrics):
     starting_block = os.path.basename(witness_file).replace('.witness.json', '')
-    file_exists = os.path.isfile('metrics.csv')
-    aggregated_metrics = {}
-
-    for metric_name, metric_data in metrics:
-        if metric_name not in aggregated_metrics:
-            aggregated_metrics[metric_name] = []
-        for metric in metric_data:
-            aggregated_metrics[metric_name].extend([value[1] for value in metric['values']])
-
-    with open('metrics.csv', mode='a', newline='') as file:
-        writer = csv.writer(file)
-        if not file_exists:
-            writer.writerow(['block_number', 'timestamp', 'metric_name', 'values'])
-        for metric_name, values in aggregated_metrics.items():
-            writer.writerow([starting_block, datetime.now(), metric_name, values])
+    csv_file = 'metrics.csv'
+    fieldnames = ['block_number', 'timestamp', 'metric_name', 'values']
+    
+    if not os.path.exists(csv_file):
+        with open(csv_file, mode='w', newline='') as file:
+            writer = csv.DictWriter(file, fieldnames=fieldnames)
+            writer.writeheader()
+    
+    with open(csv_file, mode='a', newline='') as file:
+        writer = csv.DictWriter(file, fieldnames=fieldnames)
+        for metric_name, metric_data in metrics.items():
+            values = [value[1] for value in metric_data]
+            row = {
+                'block_number': starting_block,
+                'timestamp': datetime.now(),
+                'metric_name': metric_name,
+                'values': values
+            }
+            print(f"Logging row: {row}")  # Debug statement
+            writer.writerow(row)
 
 def log_error(witness_file, error_log):
     starting_block = os.path.basename(witness_file).replace('.witness.json', '')
