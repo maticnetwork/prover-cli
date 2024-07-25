@@ -9,7 +9,7 @@ def parse_witness_file(witness_file):
         withdrawals = sum(len(tx.get('withdrawals', [])) for tx in witness_data[0].get('transactions', []))
     return num_transactions, withdrawals
 
-def generate_report(csv_file, witness_dir, total_duration):
+def generate_report(csv_file, witness_dir):
     headers = ['block_number', 'timestamp', 'num_transactions', 'time_taken', 'max_memory', 'max_cpu', 'withdrawals', 'cost_per_proof']
     report_data = []
 
@@ -30,14 +30,15 @@ def generate_report(csv_file, witness_dir, total_duration):
             max_cpu = 0
             
             # Process metrics
-            for metric_name, values in json.loads(row['values']).items():
-                if metric_name == 'memory_usage':
-                    max_memory = max(max_memory, max(map(float, values)))
-                elif metric_name == 'cpu_usage':
-                    max_cpu = max(max_cpu, max(map(float, values)))
+            if row['metric_name'] == 'memory_usage':
+                max_memory = max(map(float, eval(row['values'])))
+            elif row['metric_name'] == 'cpu_usage':
+                max_cpu = max(map(float, eval(row['values'])))
             
-            # Assuming duration is calculated and passed here
-            duration = total_duration if total_duration else 3600  # Example duration in seconds
+            # Calculate duration
+            start_time = datetime.fromisoformat(row['start_time'])
+            end_time = datetime.fromisoformat(row['end_time'])
+            duration = (end_time - start_time).total_seconds()
             
             # Assuming the cost per second of a t2d-64 high-mem node is $0.11
             cost_per_proof = duration * 0.11 / 3600

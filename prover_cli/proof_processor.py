@@ -55,13 +55,12 @@ def process_proof(witness_file):
         print(f"Failed to process proof: {e}")
         return None
 
-def log_metrics_to_csv(witness_file, metrics):
+def log_metrics_to_csv(witness_file, metrics, start_time, end_time):
     starting_block = os.path.basename(witness_file).replace('.witness.json', '')
     with open('metrics.csv', mode='a', newline='') as file:
         writer = csv.writer(file)
-        for metric_name, metric_data in metrics.items():
-            values = [value[1] for value in metric_data['values']]
-            row = [starting_block, datetime.now(), metric_name, values]
+        for metric_name, metric_data in metrics:
+            row = [starting_block, datetime.now(), metric_name, [value[1] for value in metric['values']], start_time, end_time]
             writer.writerow(row)
 
 def log_error(witness_file, error_log):
