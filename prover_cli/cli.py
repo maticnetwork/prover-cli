@@ -89,6 +89,7 @@ def main():
 
     report_parser = subparsers.add_parser('report', help='Generate a summary report')
     report_parser.add_argument('--csv_file', type=str, required=True, help='Path to the CSV file containing metrics.')
+    report_parser.add_argument('--witness_dir', type=str, required=True, help='Directory containing witness files.')
 
     args = parser.parse_args()
 
@@ -99,7 +100,7 @@ def main():
     elif args.command == 'plot':
         plot_and_analyze(args.csv_file, args.metric_name, args.block_number, args.threshold)
     elif args.command == 'report':
-        generate_report(args.csv_file)
+        generate_report(args.csv_file, args.witness_dir)
 
 if __name__ == "__main__":
     main()
