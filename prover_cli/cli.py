@@ -12,6 +12,8 @@ def run_proofs(begin_block, end_block, witness_dir, previous_proof):
     test_prometheus_connection()
     setup_environment()
 
+    total_duration = 0
+
     for current_block in range(begin_block, end_block + 1):
         current_witness = os.path.join(witness_dir, f"{current_block}.witness.json")
         print(f"Starting task with witness file {current_witness}")
@@ -22,6 +24,7 @@ def run_proofs(begin_block, end_block, witness_dir, previous_proof):
 
         # Execute the task
         output, error, duration = execute_task(current_witness, previous_proof if current_block != begin_block else None)
+        total_duration += duration
 
         # Check if command was executed successfully
         if output:
@@ -48,8 +51,7 @@ def run_proofs(begin_block, end_block, witness_dir, previous_proof):
         # Cool-down period
         time.sleep(BUFFER_WAIT_TIME)
 
-        # Return the duration for report generation
-        return duration
+    return total_duration
 
 def validate_proof(input_file, output_file):
     try:
@@ -93,13 +95,16 @@ def main():
 
     if args.command == 'run':
         duration = run_proofs(args.begin_block, args.end_block, args.witness_dir, args.previous_proof)
-        print(f"Duration: {duration} seconds")
+        print(f"Total duration: {duration} seconds")
     elif args.command == 'validate':
         validate_proof(args.input_file, args.output_file)
     elif args.command == 'plot':
         plot_and_analyze(args.csv_file, args.metric_name, args.block_number, args.threshold)
     elif args.command == 'report':
-        generate_report(args.csv_file, args.witness_dir, duration)
+        # Run proofs before generating the report if the duration is not provided
+        if not hasattr(args, 'duration'):
+            args.duration = run_proofs(args.begin_block, args.end_block, args.witness_dir, args.previous_proof)
+        generate_report(args.csv_file, args.witness_dir, args.duration)
 
 if __name__ == "__main__":
     main()
