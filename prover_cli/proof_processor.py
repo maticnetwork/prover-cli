@@ -31,8 +31,6 @@ def execute_task(witness_file, previous_proof=None):
 def process_proof(witness_file):
     output_file = witness_file.replace('.witness.json', '.leader.out')
     proof_file = witness_file.replace('.witness.json', '.proof.json')
-    cleaned_proof_file = witness_file.replace('.witness.json', '.cleaned.proof.json')
-    
     command = f"tail -n1 {output_file} | jq '.'"
     try:
         result = subprocess.run(['sh', '-c', command], capture_output=True, text=True)
@@ -43,6 +41,7 @@ def process_proof(witness_file):
             proof_json = json.loads(result.stdout)
             with open(proof_file, 'w') as pf:
                 json.dump(proof_json, pf, indent=2)
+            cleaned_proof_file = witness_file.replace('.witness.json', '.cleaned.proof.json')
             with open(cleaned_proof_file, 'w') as cpf:
                 json.dump(proof_json, cpf, indent=2)
             return proof_file, cleaned_proof_file
@@ -52,13 +51,14 @@ def process_proof(witness_file):
 
 def log_metrics_to_csv(witness_file, metrics):
     starting_block = os.path.basename(witness_file).replace('.witness.json', '')
+    file_exists = os.path.isfile('metrics.csv')
     with open('metrics.csv', mode='a', newline='') as file:
         writer = csv.writer(file)
+        if not file_exists:
+            # Write headers if file does not exist
+            writer.writerow(['block_number', 'timestamp', 'metric_name', 'values'])
         for metric_name, metric_data in metrics:
-            row = [starting_block, datetime.now(), metric_name]
-            for metric in metric_data:
-                values = [value[1] for value in metric['values']]
-                row.extend(values)
+            row = [starting_block, datetime.now(), metric_name, [value[1] for value in metric['values']]]
             writer.writerow(row)
 
 def log_error(witness_file, error_log):
@@ -72,7 +72,7 @@ def validate_and_extract_proof(raw_json):
         result = subprocess.run(['sh', '-c', f'echo \'{raw_json}\' | jq .'], capture_output=True, text=True)
         if result.returncode == 0:
             proof_json = json.loads(result.stdout)
-            return proof_json  # Return the cleaned proof
+            return proof_json
         else:
             print(f"Failed to process proof: {result.stderr}")
             return None
