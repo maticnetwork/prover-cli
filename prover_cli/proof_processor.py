@@ -1,8 +1,28 @@
 import subprocess
 import json
 import os
+import requests
 from datetime import datetime
 import csv
+
+def fetch_prometheus_metrics(prometheus_url, queries, start_time, end_time):
+    results = {}
+    for metric, query in queries.items():
+        response = requests.get(prometheus_url, params={'query': query})
+        if response.status_code == 200:
+            data = response.json()
+            if data['status'] == 'success':
+                results[metric] = [
+                    {
+                        "timestamp": value[0],
+                        "value": value[1]
+                    } for value in data['data']['result'][0]['values']
+                ]
+            else:
+                print(f"Failed to retrieve data for {metric}: {data['error']}")
+        else:
+            print(f"Failed to retrieve data for {metric}: HTTP {response.status_code}")
+    return results
 
 def execute_task(witness_file, previous_proof=None):
     output_file = witness_file.replace('.witness.json', '.leader.out')
@@ -53,15 +73,9 @@ def log_metrics_to_csv(witness_file, metrics, start_time, end_time):
     starting_block = os.path.basename(witness_file).replace('.witness.json', '')
     with open('metrics.csv', mode='a', newline='') as file:
         writer = csv.writer(file)
-        for metric in metrics:
-            metric_name = metric.get('metric', {}).get('job', 'unknown_metric')
-            values = [[value[0], value[1]] for value in metric.get('values', [])]
-            if values:
-                row = [starting_block, metric_name, start_time.isoformat(), end_time.isoformat(), (end_time - start_time).total_seconds(), json.dumps(values)]
-                writer.writerow(row)
-            else:
-                print(f"No values found for metric {metric_name} in block {starting_block}")
-
+        for metric_name, values in metrics.items():
+            row = [starting_block, metric_name, start_time.isoformat(), end_time.isoformat(), (end_time - start_time).total_seconds(), json.dumps(values)]
+            writer.writerow(row)
     print(f"Metrics for witness file {witness_file} logged successfully.")
 
 
