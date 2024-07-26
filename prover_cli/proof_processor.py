@@ -18,20 +18,15 @@ def execute_task(witness_file, previous_proof=None):
     
     print(f"Executing command: {command}")
 
-    start_time = datetime.utcnow()
     try:
         result = subprocess.run(['sh', '-c', command], capture_output=True, text=True)
-        end_time = datetime.utcnow()
-
-        duration = (end_time - start_time).total_seconds()
         print(f"Command output: {result.stdout}")
         if result.stderr:
             print(f"Command error: {result.stderr}")
-        
-        return result.stdout, result.stderr if result.stderr else None, duration
+        return result.stdout, result.stderr if result.stderr else None
     except subprocess.CalledProcessError as e:
         print(f"Command failed with error: {e.stderr}")
-        return None, e.stderr, 0
+        return None, e.stderr
 
 def process_proof(witness_file):
     output_file = witness_file.replace('.witness.json', '.leader.out')
@@ -42,25 +37,26 @@ def process_proof(witness_file):
         result = subprocess.run(['sh', '-c', command], capture_output=True, text=True)
         if result.returncode != 0:
             print(f"Failed to process proof: {result.stderr}")
-            return None
+            return None, None
         else:
             proof_json = json.loads(result.stdout)
             with open(proof_file, 'w') as pf:
                 json.dump(proof_json, pf, indent=2)
             with open(cleaned_proof_file, 'w') as cpf:
                 json.dump(proof_json, cpf, indent=2)
-            print(f"Cleaned proof saved to {cleaned_proof_file}")
             return proof_file, cleaned_proof_file
     except (subprocess.CalledProcessError, json.JSONDecodeError) as e:
         print(f"Failed to process proof: {e}")
-        return None
+        return None, None
 
 def log_metrics_to_csv(witness_file, metrics, start_time, end_time):
     starting_block = os.path.basename(witness_file).replace('.witness.json', '')
     with open('metrics.csv', mode='a', newline='') as file:
         writer = csv.writer(file)
-        for metric_name, metric_data in metrics:
-            row = [starting_block, datetime.now(), metric_name, [value[1] for value in metric['values']], start_time.isoformat(), end_time.isoformat()]
+        for metric in metrics:
+            metric_name = metric[0]
+            metric_data = metric[1]
+            row = [starting_block, datetime.now(), metric_name, [value[1] for value in metric_data['values']], start_time.isoformat(), end_time.isoformat()]
             writer.writerow(row)
 
 def log_error(witness_file, error_log):

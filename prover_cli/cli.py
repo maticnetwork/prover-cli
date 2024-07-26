@@ -19,24 +19,19 @@ def run_proofs(begin_block, end_block, witness_dir, previous_proof):
         current_witness = os.path.join(witness_dir, f"{current_block}.witness.json")
         print(f"Starting task with witness file {current_witness}")
 
-        # Track start time
-        task_start_time = datetime.utcnow()
-
         # Determine the time range for metrics collection
-        start_time = task_start_time - timedelta(seconds=BUFFER_WAIT_TIME)
+        start_time = datetime.utcnow() - timedelta(seconds=BUFFER_WAIT_TIME)
         end_time = datetime.utcnow() + timedelta(seconds=BUFFER_WAIT_TIME)
 
         # Execute the task
-        output, error, duration = execute_task(current_witness, previous_proof if current_block != begin_block else None)
-
-        # Track end time
+        task_start_time = datetime.utcnow()
+        output, error = execute_task(current_witness, previous_proof if current_block != begin_block else None)
         task_end_time = datetime.utcnow()
-        duration = (task_end_time - task_start_time).total_seconds()
 
         # Check if command was executed successfully
         if output:
             print(f"Task with witness file {current_witness} executed successfully.")
-            previous_proof = process_proof(current_witness)
+            previous_proof, cleaned_proof_file = process_proof(current_witness)
         else:
             print(f"Task with witness file {current_witness} failed to execute.")
 
@@ -46,7 +41,7 @@ def run_proofs(begin_block, end_block, witness_dir, previous_proof):
         # Fetch Prometheus metrics
         metrics = fetch_prometheus_metrics(current_witness, start_time, end_time)
 
-        # Log metrics to CSV, include task_start_time and task_end_time
+        # Log metrics to CSV
         log_metrics_to_csv(current_witness, metrics, task_start_time, task_end_time)
 
         # Log errors if any
@@ -60,7 +55,7 @@ def run_proofs(begin_block, end_block, witness_dir, previous_proof):
 
 def validate_proof(input_file, output_file):
     try:
-        proof_file = process_proof(input_file)
+        proof_file, cleaned_proof_file = process_proof(input_file)
         if proof_file:
             with open(proof_file, 'r') as pf:
                 proof = json.load(pf)
@@ -86,14 +81,14 @@ def main():
     validate_parser.add_argument('--input_file', type=str, required=True, help='Path to the input leader.out file.')
     validate_parser.add_argument('--output_file', type=str, required=True, help='Path to the output proof file.')
 
-    plot_parser = subparsers.add_parser('plot', help='Plot and analyze metrics from a CSV file')
-    plot_parser.add_argument('--csv_file', type=str, required=True, help='Path to the CSV file containing metrics.')
+    plot_parser = subparsers.add_parser('plot', help='Plot and analyze metrics from CSV')
+    plot_parser.add_argument('--csv_file', type=str, required=True, help='Path to the metrics CSV file.')
     plot_parser.add_argument('--metric_name', type=str, required=True, help='Metric name to plot.')
-    plot_parser.add_argument('--block_number', type=int, required=True, help='Block number to filter.')
-    plot_parser.add_argument('--threshold', type=float, required=True, help='Threshold for anomaly detection.')
+    plot_parser.add_argument('--block_number', type=int, required=True, help='Block number to filter by.')
+    plot_parser.add_argument('--threshold', type=float, required=True, help='Threshold for plotting.')
 
-    report_parser = subparsers.add_parser('report', help='Generate a report from metrics and witness files')
-    report_parser.add_argument('--csv_file', type=str, required=True, help='Path to the CSV file containing metrics.')
+    report_parser = subparsers.add_parser('report', help='Generate report from metrics CSV')
+    report_parser.add_argument('--csv_file', type=str, required=True, help='Path to the metrics CSV file.')
     report_parser.add_argument('--witness_dir', type=str, required=True, help='Directory containing witness files.')
 
     args = parser.parse_args()
