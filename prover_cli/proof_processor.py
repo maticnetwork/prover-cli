@@ -54,7 +54,8 @@ def log_metrics_to_csv(witness_file, metrics, start_time, end_time):
     with open('metrics.csv', mode='a', newline='') as file:
         writer = csv.writer(file)
         for metric_name, metric_data in metrics:
-            row = [starting_block, datetime.now(), metric_name, [value[1] for value in metric_data], start_time.isoformat(), end_time.isoformat()]
+            values = [[value[0], value[1]] for value in metric_data['values']]
+            row = [starting_block, metric_name, start_time.isoformat(), end_time.isoformat(), (end_time - start_time).total_seconds(), json.dumps(values)]
             writer.writerow(row)
 
 def log_error(witness_file, error_log):
