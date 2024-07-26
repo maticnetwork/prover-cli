@@ -58,9 +58,10 @@ def log_metrics_to_csv(witness_file, metrics, start_time, end_time):
     with open(csv_file_path, mode='a', newline='') as file:
         writer = csv.writer(file)
         if not file_exists:
-            writer.writerow(['block_number', 'metric_name', 'start_time', 'end_time', 'data'])
+            writer.writerow(['block number', 'metric name', 'start_time', 'end_time', 'data point values'])
         
         for metric in metrics:
+            print(f"Processing metric: {metric}")  # Debug statement
             metric_name = metric.get('metric', {}).get('job', 'unknown_metric')
             values = [[value[0], value[1]] for value in metric.get('values', [])]
             row = [starting_block, metric_name, start_time.isoformat(), end_time.isoformat(), json.dumps(values)]
