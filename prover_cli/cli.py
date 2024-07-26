@@ -61,7 +61,7 @@ def validate_proof(input_file, output_file):
         if proof_file:
             with open(proof_file, 'r') as pf:
                 proof = json.load(pf)
-            with open(output_file, 'w') as f:
+            with open(output_file, 'w') as f):
                 json.dump(proof, f, indent=2)
             print(f"Extracted proof: {proof}")
         else:

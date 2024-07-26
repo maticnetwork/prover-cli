@@ -54,8 +54,19 @@ def log_metrics_to_csv(witness_file, metrics, start_time, end_time):
     with open('metrics.csv', mode='a', newline='') as file:
         writer = csv.writer(file)
         for metric_name, metric_data in metrics:
-            values = [[value[0], value[1]] for value in metric_data['values']]
-            row = [starting_block, metric_name, start_time.isoformat(), end_time.isoformat(), (end_time - start_time).total_seconds(), json.dumps(values)]
+            # Debug print to inspect metric_data
+            print(f"Metric Name: {metric_name}")
+            print(f"Metric Data: {metric_data}")
+            
+            # Handle the case where metric_data might not be a list
+            if isinstance(metric_data, dict) and 'values' in metric_data:
+                values = [[value[0], value[1]] for value in metric_data['values']]
+            else:
+                # If metric_data is not in the expected format, skip or handle it
+                print(f"Unexpected format for metric_data: {metric_data}")
+                continue
+            
+            row = [starting_block, datetime.now(), metric_name, values, start_time.isoformat(), end_time.isoformat()]
             writer.writerow(row)
 
 def log_error(witness_file, error_log):
