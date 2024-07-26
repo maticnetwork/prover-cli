@@ -1,28 +1,8 @@
 import subprocess
 import json
 import os
-import requests
 from datetime import datetime
 import csv
-
-def fetch_prometheus_metrics(prometheus_url, queries, start_time, end_time):
-    results = {}
-    for metric, query in queries.items():
-        response = requests.get(prometheus_url, params={'query': query})
-        if response.status_code == 200:
-            data = response.json()
-            if data['status'] == 'success':
-                results[metric] = [
-                    {
-                        "timestamp": value[0],
-                        "value": value[1]
-                    } for value in data['data']['result'][0]['values']
-                ]
-            else:
-                print(f"Failed to retrieve data for {metric}: {data['error']}")
-        else:
-            print(f"Failed to retrieve data for {metric}: HTTP {response.status_code}")
-    return results
 
 def execute_task(witness_file, previous_proof=None):
     output_file = witness_file.replace('.witness.json', '.leader.out')
@@ -52,6 +32,7 @@ def process_proof(witness_file):
     output_file = witness_file.replace('.witness.json', '.leader.out')
     proof_file = witness_file.replace('.witness.json', '.proof.json')
     cleaned_proof_file = witness_file.replace('.witness.json', '.cleaned.proof.json')
+    
     command = f"tail -n1 {output_file} | jq '.'"
     try:
         result = subprocess.run(['sh', '-c', command], capture_output=True, text=True)
@@ -69,17 +50,32 @@ def process_proof(witness_file):
         print(f"Failed to process proof: {e}")
         return None, None
 
-def log_metrics_to_csv(witness_file, metrics, start_time, end_time):
+def log_metrics_to_csv(witness_file, metrics):
     starting_block = os.path.basename(witness_file).replace('.witness.json', '')
     with open('metrics.csv', mode='a', newline='') as file:
         writer = csv.writer(file)
-        for metric_name, values in metrics.items():
-            row = [starting_block, metric_name, start_time.isoformat(), end_time.isoformat(), (end_time - start_time).total_seconds(), json.dumps(values)]
+        for metric_name, metric_data in metrics:
+            row = [starting_block, datetime.now(), metric_name]
+            for metric in metric_data:
+                values = [value[1] for value in metric['values']]
+                row.extend(values)
             writer.writerow(row)
-    print(f"Metrics for witness file {witness_file} logged successfully.")
-
 
 def log_error(witness_file, error_log):
     starting_block = os.path.basename(witness_file).replace('.witness.json', '')
     with open(f'error_{starting_block}.log', mode='w') as file:
         file.write(error_log)
+
+def validate_and_extract_proof(raw_json):
+    try:
+        # Use subprocess to process the raw JSON and extract proof
+        result = subprocess.run(['sh', '-c', f'echo \'{raw_json}\' | jq .'], capture_output=True, text=True)
+        if result.returncode == 0:
+            proof_json = json.loads(result.stdout)
+            return proof_json  # Return the cleaned proof
+        else:
+            print(f"Failed to process proof: {result.stderr}")
+            return None
+    except (json.JSONDecodeError, KeyError, IndexError) as e:
+        print(f"Failed to decode JSON: {e}")
+        return None
