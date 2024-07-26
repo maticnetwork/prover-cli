@@ -21,10 +21,10 @@ def run_proofs(begin_block, end_block, witness_dir, previous_proof):
 
         # Determine the time range for metrics collection
         start_time = datetime.utcnow() - timedelta(seconds=BUFFER_WAIT_TIME)
+        task_start_time = datetime.utcnow()
         end_time = datetime.utcnow() + timedelta(seconds=BUFFER_WAIT_TIME)
 
         # Execute the task
-        task_start_time = datetime.utcnow()
         output, error = execute_task(current_witness, previous_proof if current_block != begin_block else None)
         task_end_time = datetime.utcnow()
 

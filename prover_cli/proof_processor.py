@@ -53,9 +53,7 @@ def log_metrics_to_csv(witness_file, metrics, start_time, end_time):
     starting_block = os.path.basename(witness_file).replace('.witness.json', '')
     with open('metrics.csv', mode='a', newline='') as file:
         writer = csv.writer(file)
-        for metric in metrics:
-            metric_name = metric[0]
-            metric_data = metric[1]
+        for metric_name, metric_data in metrics:
             row = [starting_block, datetime.now(), metric_name, [value[1] for value in metric_data['values']], start_time.isoformat(), end_time.isoformat()]
             writer.writerow(row)
 
