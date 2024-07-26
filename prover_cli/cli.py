@@ -40,7 +40,7 @@ def run_proofs(begin_block, end_block, witness_dir, previous_proof):
         metrics = fetch_prometheus_metrics(current_witness, start_time, end_time)
 
         # Log metrics to CSV
-        log_metrics_to_csv(current_witness, metrics)
+        log_metrics_to_csv(current_witness, metrics, task_start_time, task_end_time)
 
         # Log errors if any
         if error:

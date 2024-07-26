@@ -50,15 +50,20 @@ def process_proof(witness_file):
         print(f"Failed to process proof: {e}")
         return None, None
 
-def log_metrics_to_csv(witness_file, metrics):
+def log_metrics_to_csv(witness_file, metrics, start_time, end_time):
     starting_block = os.path.basename(witness_file).replace('.witness.json', '')
-    with open('metrics.csv', mode='a', newline='') as file:
+    csv_file_path = 'metrics.csv'
+    file_exists = os.path.isfile(csv_file_path)
+    
+    with open(csv_file_path, mode='a', newline='') as file:
         writer = csv.writer(file)
-        for metric_name, metric_data in metrics:
-            row = [starting_block, datetime.now(), metric_name]
-            for metric in metric_data:
-                values = [value[1] for value in metric['values']]
-                row.extend(values)
+        if not file_exists:
+            writer.writerow(['block_number', 'metric_name', 'start_time', 'end_time', 'data'])
+        
+        for metric in metrics:
+            metric_name = metric.get('metric', {}).get('job', 'unknown_metric')
+            values = [[value[0], value[1]] for value in metric.get('values', [])]
+            row = [starting_block, metric_name, start_time.isoformat(), end_time.isoformat(), json.dumps(values)]
             writer.writerow(row)
 
 def log_error(witness_file, error_log):
@@ -68,11 +73,10 @@ def log_error(witness_file, error_log):
 
 def validate_and_extract_proof(raw_json):
     try:
-        # Use subprocess to process the raw JSON and extract proof
         result = subprocess.run(['sh', '-c', f'echo \'{raw_json}\' | jq .'], capture_output=True, text=True)
         if result.returncode == 0:
             proof_json = json.loads(result.stdout)
-            return proof_json  # Return the cleaned proof
+            return proof_json
         else:
             print(f"Failed to process proof: {result.stderr}")
             return None
