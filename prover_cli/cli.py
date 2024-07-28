@@ -15,14 +15,12 @@ def run_proofs(begin_block, end_block, witness_dir, previous_proof):
     test_prometheus_connection()
     setup_environment()
 
-    overall_start_time = datetime.utcnow()  # Mark the overall start time
-
     for current_block in range(begin_block, end_block + 1):
         current_witness = os.path.join(witness_dir, f"{current_block}.witness.json")
         print(f"Starting task with witness file {current_witness}")
 
         # Determine the time range for metrics collection for each block
-        start_time = overall_start_time - timedelta(seconds=BUFFER_WAIT_TIME)
+        start_time = datetime.utcnow() 
 
         # Execute the task
         task_start_time = datetime.utcnow()
