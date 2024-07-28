@@ -2,6 +2,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import json
 from datetime import datetime
+import matplotlib.dates as mdates
 
 def plot_metrics(data, metric_name, block_number):
     print("Data for plotting:", data)  # Debug statement
@@ -16,16 +17,18 @@ def plot_metrics(data, metric_name, block_number):
 
     for index, row in subset.iterrows():
         values = json.loads(row['data'])
-        timestamps = [datetime.utcfromtimestamp(value[0]).strftime('%m/%d/%Y %H:%M:%S') for value in values]
-        data_points = [value[1] / (1024**3) for value in values]  # Convert bytes to GB
+        timestamps = [datetime.utcfromtimestamp(value[0]) for value in values]
+        data_points = [value[1] for value in values]  # Keep values in raw form
 
         plt.plot(timestamps, data_points, label=f"Block {block_number}")
 
     plt.xlabel('Timestamp')
-    plt.ylabel(f'{metric_name} (GB)')
+    plt.ylabel(metric_name)
     plt.title(f"{metric_name} over Time for Block {block_number}")
     plt.xticks(rotation=45)
     plt.legend()
+    plt.gca().xaxis.set_major_locator(mdates.AutoDateLocator())
+    plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%m/%d/%Y %H:%M:%S'))
 
     # Save the plot as an image
     output_file = f"plot_{metric_name}_{block_number}.png"
