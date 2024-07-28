@@ -3,7 +3,7 @@ import pandas as pd
 import json
 from datetime import datetime
 import matplotlib.pyplot as plt
-from fpdf import FPDFs
+from fpdf import FPDF
 
 def get_tx_count(witness_file):
     with open(witness_file, 'r') as f:
