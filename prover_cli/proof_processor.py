@@ -49,15 +49,37 @@ def process_proof(witness_file):
     except (subprocess.CalledProcessError, json.JSONDecodeError) as e:
         print(f"Failed to process proof: {e}")
         return None, None
+        
+def log_metrics_to_csv(witness_file, metrics, start_time, end_time):
+    starting_block = os.path.basename(witness_file).replace('.witness.json', '')
+    csv_file_path = 'metrics.csv'
+    file_exists = os.path.isfile(csv_file_path)
+    
+    with open(csv_file_path, mode='a', newline='') as file:
+        writer = csv.writer(file)
+        if not file_exists:
+            writer.writerow(['block number', 'metric name', 'start_time', 'end_time', 'data point values'])
+        
+        for metric in metrics:
+            metric_name = metric.get('metric', {}).get('job', 'unknown_metric')
+            values = [[value[0], value[1]] for value in metric.get('values', [])]
+            row = [starting_block, metric_name, start_time.isoformat(), end_time.isoformat(), json.dumps(values)]
+            writer.writerow(row)
 
 def log_metrics_to_csv(witness_file, metrics):
     starting_block = os.path.basename(witness_file).replace('.witness.json', '')
-    with open('metrics.csv', mode='a', newline='') as file:
+    csv_file_path = 'metrics.csv'
+    file_exists = os.path.isfile(csv_file_path)
+    
+    with open(csv_file_path, mode='a', newline='') as file:
         writer = csv.writer(file)
+        if not file_exists:
+            writer.writerow(['block_number', 'metric_name', 'data'])
+            
         for metric_name, metric_data in metrics:
-            row = [starting_block, datetime.now(), metric_name]
+            row = [starting_block, metric_name]
             for metric in metric_data:
-                values = [value[1] for value in metric['values']]
+                values = [[[value[0],value[1]] for value in metric['values']]]
                 row.extend(values)
             writer.writerow(row)
 
