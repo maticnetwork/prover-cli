@@ -13,7 +13,7 @@ def test_prometheus_connection():
 
 def fetch_prometheus_metrics(witness_file, start_time, end_time):
     queries = {
-        'cpu_usage': 'container_cpu_usage_seconds_total',
+        'cpu_usage': 'rate(container_cpu_usage_seconds_total[1m]) * 100',
         'memory_usage': 'container_memory_usage_bytes',
         'disk_read': 'node_disk_read_bytes_total',
         'disk_write': 'node_disk_written_bytes_total',

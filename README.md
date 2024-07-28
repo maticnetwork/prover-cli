@@ -16,7 +16,7 @@ git clone https://github.com/rebelArtists/prover_cli.git
 cd prover_cli
 python3 -m venv venv
 source venv/bin/activate
-pip install -e .
+pip install -r requirements && pip install -e .
 
 
 # Usage
@@ -27,19 +27,24 @@ Before running the CLI, set up port forwarding for Prometheus for metric trackin
 nohup kubectl port-forward --namespace kube-prometheus --address localhost svc/prometheus-operated 9090:9090 &
 
 
-## Process a Range of Witnesses
+## Prove Range of Witnesses
 
-prover-cli run --begin_block 20362226 --end_block 20362237 --witness_dir /path/to/witnesses
+prover-cli run --begin_block 123 --end_block 124 --witness_dir /path/to/witnesses
 
 
-## Validating and Extracting Proof
+## Validate and Extract Proof
 
 prover-cli validate --input_file /path/to/leader.out --output_file /path/to/cleaned_proof.json
 
 
-## Plotting Metrics
+## Plot Prover Metrics
 
-prover-cli plot --csv_file /path/to/metrics.csv --metric_name cpu_usage --block_number 20362227 --threshold 0.002
+prover-cli plot --csv_file metrics.csv --metric_name network_transmit --block_number 123
+
+
+## Creating Final Performance Report
+
+prover-cli report --witness_dir /tmp/prover_cli --metrics_csv /tmp/prover_cli/metrics.csv
 
 
 ## Review Metrics

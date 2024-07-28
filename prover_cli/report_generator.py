@@ -2,7 +2,6 @@ import os
 import pandas as pd
 import json
 from datetime import datetime
-import matplotlib.pyplot as plt
 from fpdf import FPDF
 
 def get_tx_count(witness_file):
@@ -36,15 +35,15 @@ def generate_report(witness_dir, metrics_csv):
 
             summary_data.append({
                 'block_number': block_number,
-                'start_time': start_time,
-                'end_time': end_time,
+                'start_time': start_time.strftime('%Y-%m-%d %H:%M:%S'),
+                'end_time': end_time.strftime('%Y-%m-%d %H:%M:%S'),
                 'duration': duration,
                 'max_cpu': max_cpu,
                 'max_memory': max_memory,
                 'tx_count': tx_count
             })
 
-    # Generate PDF report
+    # Generate PDF report in a table format
     pdf = FPDF()
     pdf.add_page()
     pdf.set_font("Arial", size=12)
@@ -54,15 +53,24 @@ def generate_report(witness_dir, metrics_csv):
     pdf.ln(10)
 
     pdf.set_font("Arial", size=10)
+    col_width = pdf.w / 7
+    row_height = pdf.font_size * 1.5
+
+    headers = ['Block Number', 'Start Time', 'End Time', 'Duration (s)', 'Max CPU', 'Max Memory', 'Transaction Count']
+    for header in headers:
+        pdf.cell(col_width, row_height, txt=header, border=1, align='C')
+
+    pdf.ln(row_height)
+
     for summary in summary_data:
-        pdf.cell(200, 10, txt=f"Block Number: {summary['block_number']}", ln=True)
-        pdf.cell(200, 10, txt=f"Start Time: {summary['start_time']}", ln=True)
-        pdf.cell(200, 10, txt=f"End Time: {summary['end_time']}", ln=True)
-        pdf.cell(200, 10, txt=f"Duration (s): {summary['duration']}", ln=True)
-        pdf.cell(200, 10, txt=f"Max CPU: {summary['max_cpu']}", ln=True)
-        pdf.cell(200, 10, txt=f"Max Memory: {summary['max_memory']}", ln=True)
-        pdf.cell(200, 10, txt=f"Transaction Count: {summary['tx_count']}", ln=True)
-        pdf.ln(5)
+        pdf.cell(col_width, row_height, txt=str(summary['block_number']), border=1)
+        pdf.cell(col_width, row_height, txt=summary['start_time'], border=1)
+        pdf.cell(col_width, row_height, txt=summary['end_time'], border=1)
+        pdf.cell(col_width, row_height, txt=str(summary['duration']), border=1)
+        pdf.cell(col_width, row_height, txt=str(summary['max_cpu']), border=1)
+        pdf.cell(col_width, row_height, txt=str(summary['max_memory']), border=1)
+        pdf.cell(col_width, row_height, txt=str(summary['tx_count']), border=1)
+        pdf.ln(row_height)
 
     report_file = f"perf_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
     pdf.output(report_file)
