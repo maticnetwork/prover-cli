@@ -12,18 +12,17 @@ BUFFER_WAIT_TIME = 20
 COLLECTION_INTERVAL = 60  # Interval in seconds for metrics collection
 
 class MetricsCollector(threading.Thread):
-    def __init__(self, witness_file, start_time, end_time, stop_event, prom_url):
+    def __init__(self, witness_file, start_time, end_time, stop_event):
         threading.Thread.__init__(self)
         self.witness_file = witness_file
         self.start_time = start_time
         self.end_time = end_time
         self.stop_event = stop_event
-        self.prom_url = prom_url
 
     def run(self):
         while not self.stop_event.is_set():
             # Fetch Prometheus metrics
-            metrics = fetch_prometheus_metrics(self.start_time, self.end_time, self.prom_url)
+            metrics = fetch_prometheus_metrics(self.start_time, self.end_time)
             # Log metrics to CSV
             log_metrics_to_csv(self.witness_file, metrics)
             print(f"Logged metrics to CSV for {self.witness_file}")
@@ -35,7 +34,7 @@ class MetricsCollector(threading.Thread):
             # Wait for the next collection interval or until stopped
             self.stop_event.wait(COLLECTION_INTERVAL)
 
-def run_proofs(begin_block, end_block, witness_dir, previous_proof, prom_url):
+def run_proofs(begin_block, end_block, witness_dir, previous_proof):
     test_prometheus_connection()
     setup_environment()
 
@@ -51,7 +50,7 @@ def run_proofs(begin_block, end_block, witness_dir, previous_proof, prom_url):
         stop_event = threading.Event()
 
         # Start the metrics collector thread
-        metrics_collector = MetricsCollector(current_witness, start_time, end_time, stop_event, prom_url)
+        metrics_collector = MetricsCollector(current_witness, start_time, end_time, stop_event)
         metrics_collector.start()
 
         # Execute the task
