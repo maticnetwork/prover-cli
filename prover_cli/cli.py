@@ -7,6 +7,7 @@ from prover_cli.prometheus import test_prometheus_connection, fetch_prometheus_m
 from prover_cli.proof_processor import execute_task, process_proof, log_metrics_to_csv, log_error
 from prover_cli.setup_environment import setup_environment
 from prover_cli.plotting import plot_and_analyze
+from prover_cli.report_generator import generate_report
 
 BUFFER_WAIT_TIME = 20
 
@@ -67,6 +68,9 @@ def validate_proof(input_file, output_file):
     except Exception as e:
         print(f"Failed to validate and extract proof: {e}")
 
+def generate_final_report(witness_dir, metrics_csv):
+    generate_report(witness_dir, metrics_csv)
+
 def main():
     parser = argparse.ArgumentParser(description='Prover CLI')
     subparsers = parser.add_subparsers(dest='command')
@@ -85,6 +89,10 @@ def main():
     plot_parser.add_argument('--csv_file', type=str, required=True, help='Path to the metrics CSV file.')
     plot_parser.add_argument('--metric_name', type=str, required=True, help='Metric name to plot.')
     plot_parser.add_argument('--block_number', type=int, required=True, help='Block number to filter by.')
+    
+    report_parser = subparsers.add_parser('report', help='Generate performance report')
+    report_parser.add_argument('--witness_dir', type=str, required=True, help='Directory containing witness files.')
+    report_parser.add_argument('--metrics_csv', type=str, required=True, help='Path to the metrics CSV file.')
 
     args = parser.parse_args()
 
@@ -94,6 +102,8 @@ def main():
         validate_proof(args.input_file, args.output_file)
     elif args.command == 'plot':
         plot_and_analyze(args.csv_file, args.metric_name, args.block_number)
+    elif args.command == 'report':
+        generate_final_report(args.witness_dir, args.metrics_csv)
 
 if __name__ == "__main__":
     main()
