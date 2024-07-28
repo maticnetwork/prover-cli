@@ -5,19 +5,19 @@ import time
 import threading
 from datetime import datetime, timedelta
 from prover_cli.prometheus import test_prometheus_connection, fetch_prometheus_metrics
-from prover_cli.proof_processor import execute_task, process_proof, validate_and_extract_proof, log_metrics_to_csv, log_error
+from prover_cli.proof_processor import execute_task, process_proof, log_metrics_to_csv, log_error
 from prover_cli.setup_environment import setup_environment
 
 BUFFER_WAIT_TIME = 20
 COLLECTION_INTERVAL = 60  # Interval in seconds for metrics collection
 
 class MetricsCollector(threading.Thread):
-    def __init__(self, witness_file, start_time, end_time, stop_event):
+    def __init__(self, witness_file, stop_event):
         threading.Thread.__init__(self)
         self.witness_file = witness_file
-        self.start_time = start_time
-        self.end_time = end_time
         self.stop_event = stop_event
+        self.start_time = datetime.utcnow() - timedelta(seconds=BUFFER_WAIT_TIME)
+        self.end_time = datetime.utcnow() + timedelta(seconds=BUFFER_WAIT_TIME)
 
     def run(self):
         while not self.stop_event.is_set():
@@ -34,7 +34,7 @@ class MetricsCollector(threading.Thread):
             # Wait for the next collection interval or until stopped
             self.stop_event.wait(COLLECTION_INTERVAL)
 
-def run_proofs(begin_block, end_block, witness_dir, previous_proof):
+def run_proofs(begin_block, end_block, witness_dir, previous_proof=None):
     test_prometheus_connection()
     setup_environment()
 
@@ -42,15 +42,11 @@ def run_proofs(begin_block, end_block, witness_dir, previous_proof):
         current_witness = os.path.join(witness_dir, f"{current_block}.witness.json")
         print(f"Starting task with witness file {current_witness}")
 
-        # Determine the initial time range for metrics collection
-        start_time = datetime.utcnow() - timedelta(seconds=BUFFER_WAIT_TIME)
-        end_time = datetime.utcnow() + timedelta(seconds=BUFFER_WAIT_TIME)
-
         # Event to signal the metrics collector to stop
         stop_event = threading.Event()
 
         # Start the metrics collector thread
-        metrics_collector = MetricsCollector(current_witness, start_time, end_time, stop_event)
+        metrics_collector = MetricsCollector(current_witness, stop_event)
         metrics_collector.start()
 
         # Execute the task
