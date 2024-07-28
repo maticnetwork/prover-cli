@@ -6,6 +6,7 @@ from datetime import datetime, timedelta
 from prover_cli.prometheus import test_prometheus_connection, fetch_prometheus_metrics
 from prover_cli.proof_processor import execute_task, process_proof, log_metrics_to_csv, log_error
 from prover_cli.setup_environment import setup_environment
+from prover_cli.plotting import plot_and_analyze
 
 BUFFER_WAIT_TIME = 20
 
@@ -79,6 +80,12 @@ def main():
     validate_parser = subparsers.add_parser('validate', help='Validate and extract proof from leader.out file')
     validate_parser.add_argument('--input_file', type=str, required=True, help='Path to the input leader.out file.')
     validate_parser.add_argument('--output_file', type=str, required=True, help='Path to the output proof file.')
+    
+    plot_parser = subparsers.add_parser('plot', help='Plot and analyze metrics from CSV')
+    plot_parser.add_argument('--csv_file', type=str, required=True, help='Path to the metrics CSV file.')
+    plot_parser.add_argument('--metric_name', type=str, required=True, help='Metric name to plot.')
+    plot_parser.add_argument('--block_number', type=int, required=True, help='Block number to filter by.')
+    plot_parser.add_argument('--threshold', type=float, required=True, help='Threshold for plotting.')
 
     args = parser.parse_args()
 
@@ -86,6 +93,8 @@ def main():
         run_proofs(args.begin_block, args.end_block, args.witness_dir, args.previous_proof)
     elif args.command == 'validate':
         validate_proof(args.input_file, args.output_file)
+    elif args.command == 'plot':
+        plot_and_analyze(args.csv_file, args.metric_name, args.block_number, args.threshold)
 
 if __name__ == "__main__":
     main()
