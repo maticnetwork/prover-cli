@@ -21,7 +21,7 @@ class PDF(FPDF):
 
     def add_table(self, data):
         self.set_font('Arial', 'B', 10)
-        col_widths = [25, 40, 40, 25, 25, 40, 30]  # Adjust these widths as needed
+        col_widths = [30, 45, 45, 30, 25, 35, 35]  # Adjust these widths as needed
         headers = ['Block Number', 'Start Time', 'End Time', 'Duration (s)', 'Max CPU', 'Max Memory', 'Transaction Count']
         
         for i, header in enumerate(headers):
@@ -87,8 +87,8 @@ def generate_report(witness_dir, metrics_csv):
 
         report_data.append([block_number, start_time, end_time, duration, max_cpu, max_memory, txn_count])
 
-    # Generate PDF
-    pdf = PDF()
+    # Generate PDF in landscape mode
+    pdf = PDF(orientation='L')
     pdf.add_page()
     pdf.add_table(report_data)
     output_filename = f"perf_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
