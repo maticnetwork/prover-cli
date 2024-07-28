@@ -29,7 +29,7 @@ def run_proofs(begin_block, end_block, witness_dir, previous_proof):
         # Check if command was executed successfully
         if output:
             print(f"Task with witness file {current_witness} executed successfully.")
-            proof_file, cleaned_proof_file = process_proof(current_witness)
+            proof_file = process_proof(current_witness)
         else:
             print(f"Task with witness file {current_witness} failed to execute.")
 
