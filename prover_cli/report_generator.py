@@ -41,9 +41,8 @@ def generate_report(witness_dir, metrics_csv):
     import json
 
     # Load metrics data
-    df = pd.read_csv(metrics_csv)
-    df['timestamp'] = pd.to_datetime(df['timestamp'])
-    
+    df = pd.read_csv(metrics_csv, names=['block_number', 'metric_name', 'data'])
+
     # Collect data for the report
     report_data = []
     witness_files = glob.glob(os.path.join(witness_dir, '*.witness.json'))
@@ -54,11 +53,33 @@ def generate_report(witness_dir, metrics_csv):
         if block_df.empty:
             continue
         
-        start_time = block_df['timestamp'].min()
-        end_time = block_df['timestamp'].max()
+        # Initialize variables for start_time, end_time, and max values
+        start_time = None
+        end_time = None
+        max_cpu = 0
+        max_memory = 0
+
+        for index, row in block_df.iterrows():
+            data = json.loads(row['data'])
+            if not data:
+                continue
+
+            # Calculate start_time and end_time
+            if start_time is None or data[0][0] < start_time:
+                start_time = data[0][0]
+            if end_time is None or data[-1][0] > end_time:
+                end_time = data[-1][0]
+
+            # Update max values for CPU and memory
+            if row['metric_name'] == 'cpu_usage':
+                max_cpu = max(max_cpu, max(value[1] for value in data))
+            elif row['metric_name'] == 'memory_usage':
+                max_memory = max(max_memory, max(value[1] for value in data))
+
+        # Convert start_time and end_time to datetime objects
+        start_time = datetime.utcfromtimestamp(start_time)
+        end_time = datetime.utcfromtimestamp(end_time)
         duration = (end_time - start_time).total_seconds()
-        max_cpu = block_df[block_df['metric_name'] == 'cpu_usage']['values'].apply(lambda x: max(json.loads(x), key=lambda y: y[1])[1] if x else 0).max()
-        max_memory = block_df[block_df['metric_name'] == 'memory_usage']['values'].apply(lambda x: max(json.loads(x), key=lambda y: y[1])[1] if x else 0).max()
 
         with open(witness_file, 'r') as f:
             witness_data = json.load(f)
