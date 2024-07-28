@@ -76,6 +76,8 @@ def log_metrics_to_csv(witness_file, metrics):
         if not file_exists:
             writer.writerow(['block_number', 'metric_name', 'data'])
             
+        print(metrics)
+            
         for metric_name, metric_data in metrics:
             row = [starting_block, metric_name]
             for metric in metric_data:
