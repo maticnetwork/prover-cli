@@ -79,11 +79,10 @@ def log_metrics_to_csv(witness_file, metrics):
         print(metrics)
             
         for metric_name, metric_data in metrics:
-            row = [starting_block, metric_name]
             for metric in metric_data:
-                values = [[[value[0],value[1]] for value in metric['values']]]
-                row.extend(values)
-            writer.writerow(row)
+                values = [[value[0],value[1]] for value in metric['values']]
+        row = [starting_block, metric_name, values]
+        writer.writerow(row)
 
 def log_error(witness_file, error_log):
     starting_block = os.path.basename(witness_file).replace('.witness.json', '')
