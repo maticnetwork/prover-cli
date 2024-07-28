@@ -2,61 +2,29 @@ import argparse
 import os
 import json
 import time
-import threading
 from datetime import datetime, timedelta
 from prover_cli.prometheus import test_prometheus_connection, fetch_prometheus_metrics
 from prover_cli.proof_processor import execute_task, process_proof, log_metrics_to_csv, log_error
 from prover_cli.setup_environment import setup_environment
 
 BUFFER_WAIT_TIME = 20
-COLLECTION_INTERVAL = 60  # Interval in seconds for metrics collection
 
-class MetricsCollector(threading.Thread):
-    def __init__(self, witness_file, stop_event):
-        threading.Thread.__init__(self)
-        self.witness_file = witness_file
-        self.stop_event = stop_event
-        self.start_time = datetime.utcnow() - timedelta(seconds=BUFFER_WAIT_TIME)
-        self.end_time = datetime.utcnow() + timedelta(seconds=BUFFER_WAIT_TIME)
-
-    def run(self):
-        while not self.stop_event.is_set():
-            # Fetch Prometheus metrics
-            metrics = fetch_prometheus_metrics(self.start_time, self.end_time)
-            # Log metrics to CSV
-            log_metrics_to_csv(self.witness_file, metrics)
-            print(f"Logged metrics to CSV for {self.witness_file}")
-
-            # Update time range for the next collection
-            self.start_time = datetime.utcnow() - timedelta(seconds=BUFFER_WAIT_TIME)
-            self.end_time = datetime.utcnow() + timedelta(seconds=BUFFER_WAIT_TIME)
-
-            # Wait for the next collection interval or until stopped
-            self.stop_event.wait(COLLECTION_INTERVAL)
-
-def run_proofs(begin_block, end_block, witness_dir, previous_proof=None):
+def run_proofs(begin_block, end_block, witness_dir, previous_proof):
     test_prometheus_connection()
     setup_environment()
+
+    overall_start_time = datetime.utcnow()  # Mark the overall start time
 
     for current_block in range(begin_block, end_block + 1):
         current_witness = os.path.join(witness_dir, f"{current_block}.witness.json")
         print(f"Starting task with witness file {current_witness}")
 
-        # Event to signal the metrics collector to stop
-        stop_event = threading.Event()
-
-        # Start the metrics collector thread
-        metrics_collector = MetricsCollector(current_witness, stop_event)
-        metrics_collector.start()
+        # Determine the time range for metrics collection for each block
+        start_time = overall_start_time - timedelta(seconds=BUFFER_WAIT_TIME)
 
         # Execute the task
         task_start_time = datetime.utcnow()
         output, error = execute_task(current_witness, previous_proof if current_block != begin_block else None)
-        task_end_time = datetime.utcnow()
-
-        # Signal the metrics collector to stop
-        stop_event.set()
-        metrics_collector.join()  # Wait for the metrics collector thread to finish
 
         # Check if command was executed successfully
         if output:
@@ -64,6 +32,16 @@ def run_proofs(begin_block, end_block, witness_dir, previous_proof=None):
             proof_file, cleaned_proof_file = process_proof(current_witness)
         else:
             print(f"Task with witness file {current_witness} failed to execute.")
+
+        # Wait for metrics to land
+        time.sleep(BUFFER_WAIT_TIME)
+        end_time = datetime.utcnow()
+
+        # Fetch Prometheus metrics
+        metrics = fetch_prometheus_metrics(current_witness, start_time, end_time)
+
+        # Log metrics to CSV
+        log_metrics_to_csv(current_witness, metrics)
 
         # Log errors if any
         if error:

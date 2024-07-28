@@ -13,12 +13,12 @@ def test_prometheus_connection():
 
 def fetch_prometheus_metrics(witness_file, start_time, end_time):
     queries = {
-        'cpu_usage': 'rate(container_cpu_usage_seconds_total[1m])',
+        'cpu_usage': 'container_cpu_usage_seconds_total',
         'memory_usage': 'container_memory_usage_bytes',
-        'disk_read': 'rate(node_disk_read_bytes_total[1m])',
-        'disk_write': 'rate(node_disk_written_bytes_total[1m])',
-        'network_receive': 'rate(node_network_receive_bytes_total[1m])',
-        'network_transmit': 'rate(node_network_transmit_bytes_total[1m])'
+        'disk_read': 'node_disk_read_bytes_total',
+        'disk_write': 'node_disk_written_bytes_total',
+        'network_receive': 'node_network_receive_bytes_total',
+        'network_transmit': 'node_network_transmit_bytes_total'
     }
     
     metrics = []
