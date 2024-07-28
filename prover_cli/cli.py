@@ -85,7 +85,6 @@ def main():
     plot_parser.add_argument('--csv_file', type=str, required=True, help='Path to the metrics CSV file.')
     plot_parser.add_argument('--metric_name', type=str, required=True, help='Metric name to plot.')
     plot_parser.add_argument('--block_number', type=int, required=True, help='Block number to filter by.')
-    plot_parser.add_argument('--threshold', type=float, required=True, help='Threshold for plotting.')
 
     args = parser.parse_args()
 
@@ -94,7 +93,7 @@ def main():
     elif args.command == 'validate':
         validate_proof(args.input_file, args.output_file)
     elif args.command == 'plot':
-        plot_and_analyze(args.csv_file, args.metric_name, args.block_number, args.threshold)
+        plot_and_analyze(args.csv_file, args.metric_name, args.block_number)
 
 if __name__ == "__main__":
     main()

@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import json
 
-def plot_metrics(data, metric_name, block_number, threshold):
+def plot_metrics(data, metric_name, block_number):
     print("Data for plotting:", data)  # Debug statement
     print(f"Filtering for block_number: {block_number}, metric_name: {metric_name}")  # Debug statement
     
@@ -14,13 +14,12 @@ def plot_metrics(data, metric_name, block_number, threshold):
         return
 
     for index, row in subset.iterrows():
-        values = json.loads(row['values'])  # Parse the JSON string into a list of lists
-        timestamps = [v[0] for v in values]
-        metrics = [v[1] for v in values]
+        values = json.loads(row['data'])
+        timestamps = [value[0] for value in values]
+        data_points = [value[1] for value in values]
 
-        plt.plot(timestamps, metrics, label=f"Block {block_number}")
+        plt.plot(timestamps, data_points, label=f"Block {block_number}")
 
-    plt.axhline(y=threshold, color='r', linestyle='--', label='Threshold')
     plt.xlabel('Timestamp')
     plt.ylabel(metric_name)
     plt.title(f"{metric_name} over Time for Block {block_number}")
@@ -29,11 +28,10 @@ def plot_metrics(data, metric_name, block_number, threshold):
     # Save the plot as an image
     output_file = f"plot_{metric_name}_{block_number}.png"
     plt.savefig(output_file)
-    plt.close()  # Close the plot to avoid overlapping of plots in subsequent calls
     print(f"Plot saved to {output_file}")
 
-def plot_and_analyze(csv_file, metric_name, block_number, threshold):
-    headers = ['block_number', 'metric_name', 'values']
+def plot_and_analyze(csv_file, metric_name, block_number):
+    headers = ['block_number', 'metric_name', 'data']
     data = pd.read_csv(csv_file, header=0, names=headers)
     print("CSV data:", data)  # Debug statement
-    plot_metrics(data, metric_name, block_number, threshold)
+    plot_metrics(data, metric_name, block_number)
