@@ -5,7 +5,7 @@ import glob
 import json
 import os
 
-def generate_report(metrics_csv_path, witness_dir:
+def generate_report(metrics_csv_path, witness_dir):
     # Read the metrics CSV file
     df = pd.read_csv(metrics_csv_path)
     
