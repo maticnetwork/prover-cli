@@ -5,7 +5,7 @@ import glob
 import json
 import os
 
-def generate_report(metrics_csv_path, witness_dir):
+def generate_report(witness_dir, metrics_csv_path):
     # Ensure metrics_csv_path is a file and not a directory
     if not os.path.isfile(metrics_csv_path):
         raise ValueError(f"The metrics_csv_path provided is not a file: {metrics_csv_path}")
