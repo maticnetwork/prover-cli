@@ -39,7 +39,7 @@ def generate_report(witness_dir, metrics_csv_path):
             }
 
             # Get witness file corresponding to the block number
-            witness_file = next((file for file in witness_files if f'block_{block_number}' in file), None)
+            witness_file = next((file for file in witness_files if f'{block_number}.witness' in file), None)
             if witness_file:
                 block_data['num_transactions'] = get_num_transactions(witness_file)
 
