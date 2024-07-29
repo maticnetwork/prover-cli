@@ -22,14 +22,8 @@ def generate_report(witness_dir, metrics_csv_path):
         def get_num_transactions(witness_file):
             with open(witness_file, 'r') as file:
                 data = json.load(file)
+                print(data)
             return len(data[0]['block_trace']['txn_info'])
-
-        # Function to get withdrawals from witness files
-        def get_withdrawals(witness_file):
-            with open(witness_file, 'r') as file:
-                data = json.load(file)
-            # Placeholder: replace with actual logic to extract withdrawals
-            return data[0]['withdrawals'] if 'withdrawals' in data[0] else 0
 
         # Group by block_number
         grouped = df.groupby('block_number')
@@ -37,19 +31,17 @@ def generate_report(witness_dir, metrics_csv_path):
         for block_number, group in grouped:
             block_data = {
                 'block_number': block_number,
-                'num_transactions': None,  # Placeholder, replace with actual computation if available
-                'time_taken': None,  # Placeholder, replace with actual computation if available
+                'num_transactions': None,
+                'time_taken': None,
                 'max_memory': None,
                 'max_cpu': None,
-                'withdrawals': None,  # Placeholder, replace with actual computation if available
-                'cost_per_proof': None  # Placeholder, replace with actual computation if available
+                'cost_per_proof': None
             }
 
             # Get witness file corresponding to the block number
             witness_file = next((file for file in witness_files if f'block_{block_number}' in file), None)
             if witness_file:
                 block_data['num_transactions'] = get_num_transactions(witness_file)
-                block_data['withdrawals'] = get_withdrawals(witness_file)
 
             # Iterate over each metric in the group
             for _, row in group.iterrows():
@@ -65,6 +57,11 @@ def generate_report(witness_dir, metrics_csv_path):
                 # Calculate time_taken by comparing the first and last timestamps
                 if block_data['time_taken'] is None:
                     block_data['time_taken'] = metric_data[-1][0] - metric_data[0][0]
+
+            # Calculate cost per proof
+            if block_data['time_taken'] is not None:
+                cost_per_second = 1221.28 / (30 * 24 * 60 * 60)
+                block_data['cost_per_proof'] = block_data['time_taken'] * cost_per_second
 
             aggregated_data.append(block_data)
 
