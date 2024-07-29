@@ -1,10 +1,11 @@
 import pandas as pd
+import datetime
 import ast
 import glob
 import json
 import os
 
-def generate_report(metrics_csv_path, witness_dir, output_csv_path):
+def generate_report(metrics_csv_path, witness_dir:
     # Read the metrics CSV file
     df = pd.read_csv(metrics_csv_path)
     
@@ -70,6 +71,10 @@ def generate_report(metrics_csv_path, witness_dir, output_csv_path):
 
     # Aggregate the metrics
     final_report_df = aggregate_metrics(df, witness_files)
+    
+    timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+    # Create the output CSV path with the timestamp
+    output_csv_path = f"performance_report_{timestamp}.csv"
 
     # Save to CSV
     final_report_df.to_csv(output_csv_path, index=False)
