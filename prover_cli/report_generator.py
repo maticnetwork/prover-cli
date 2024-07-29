@@ -6,9 +6,13 @@ import json
 import os
 
 def generate_report(metrics_csv_path, witness_dir):
+    # Ensure metrics_csv_path is a file and not a directory
+    if not os.path.isfile(metrics_csv_path):
+        raise ValueError(f"The metrics_csv_path provided is not a file: {metrics_csv_path}")
+
     # Read the metrics CSV file
     df = pd.read_csv(metrics_csv_path)
-    
+
     # Function to parse and aggregate data for each block number
     def aggregate_metrics(df, witness_files):
         # Initialize a list to store aggregated results
@@ -74,7 +78,7 @@ def generate_report(metrics_csv_path, witness_dir):
     
     timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
     # Create the output CSV path with the timestamp
-    output_csv_path = f"performance_report_{timestamp}.csv"
+    output_csv_path = os.path.join(os.path.dirname(metrics_csv_path), f"performance_report_{timestamp}.csv")
 
     # Save to CSV
     final_report_df.to_csv(output_csv_path, index=False)
