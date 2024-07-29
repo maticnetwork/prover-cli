@@ -22,7 +22,6 @@ def generate_report(witness_dir, metrics_csv_path):
         def get_num_transactions(witness_file):
             with open(witness_file, 'r') as file:
                 data = json.load(file)
-                print(data)
             return len(data[0]['block_trace']['txn_info'])
 
         # Group by block_number
