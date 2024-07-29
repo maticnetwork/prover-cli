@@ -1,96 +1,96 @@
-from fpdf import FPDF
-from datetime import datetime
+import pandas as pd
+import ast
+import glob
+import json
 
-class PDF(FPDF):
-    def header(self):
-        self.set_font('Arial', 'B', 12)
-        self.cell(0, 10, 'Performance Report', 0, 1, 'C')
-        self.set_font('Arial', '', 10)
-        self.cell(0, 10, f'Generated on: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}', 0, 1, 'C')
-        self.ln(10)
+# Sample CSV data
+data = {
+    'block_number': [123, 123, 123, 123, 123, 123, 124, 124, 124, 124, 124, 124],
+    'metric_name': ['cpu_usage', 'memory_usage', 'disk_read', 'disk_write', 'network_receive', 'network_transmit',
+                    'cpu_usage', 'memory_usage', 'disk_read', 'disk_write', 'network_receive', 'network_transmit'],
+    'data': [
+        "[[1722153345, 0.0], [1722153360, 0.0], [1722153375, 0.0], [1722153390, 0.0], [1722153405, 0.0], [1722153420, 0.0], [1722153435, 0.0], [1722153450, 0.0], [1722153465, 0.0], [1722153480, 0.0], [1722153495, 0.0], [1722153510, 0.0], [1722153525, 0.0], [1722153540, 0.0], [1722153570, 0.0], [1722153585, 0.0], [1722153600, 0.0], [1722153615, 0.0], [1722153630, 0.0], [1722153660, 0.0], [1722153675, 0.0], [1722153690, 0.0], [1722153705, 0.0], [1722153720, 0.0]]",
+        "[[1722153345, 270336.0], [1722153360, 270336.0], [1722153375, 270336.0], [1722153390, 270336.0], [1722153405, 270336.0], [1722153420, 270336.0], [1722153435, 270336.0], [1722153450, 270336.0], [1722153465, 270336.0], [1722153480, 270336.0], [1722153495, 270336.0], [1722153510, 270336.0], [1722153525, 270336.0], [1722153540, 270336.0], [1722153555, 270336.0], [1722153570, 270336.0], [1722153585, 270336.0], [1722153600, 270336.0], [1722153615, 270336.0], [1722153630, 270336.0], [1722153645, 270336.0], [1722153660, 270336.0], [1722153675, 270336.0], [1722153690, 270336.0], [1722153705, 270336.0], [1722153720, 270336.0], [1722153735, 270336.0]]",
+        "[[1722153345, 3351552.0], [1722153360, 3351552.0], [1722153375, 3351552.0], [1722153390, 3351552.0], [1722153405, 3351552.0], [1722153420, 3351552.0], [1722153435, 3351552.0], [1722153450, 3351552.0], [1722153465, 3351552.0], [1722153480, 3351552.0], [1722153495, 3351552.0], [1722153510, 3351552.0], [1722153525, 3351552.0], [1722153540, 3351552.0], [1722153555, 3351552.0], [1722153570, 3351552.0], [1722153585, 3351552.0], [1722153600, 3351552.0], [1722153615, 3351552.0], [1722153630, 3351552.0], [1722153645, 3351552.0], [1722153660, 3351552.0], [1722153675, 3351552.0], [1722153690, 3351552.0], [1722153705, 3351552.0], [1722153720, 3351552.0], [1722153735, 3351552.0]]",
+        "[[1722153345, 909340672.0], [1722153360, 909340672.0], [1722153375, 910598144.0], [1722153390, 910598144.0], [1722153405, 910626816.0], [1722153420, 910626816.0], [1722153435, 910639104.0], [1722153450, 910639104.0], [1722153465, 910708736.0], [1722153480, 910708736.0], [1722153495, 910770176.0], [1722153510, 910770176.0], [1722153525, 910815232.0], [1722153540, 910815232.0], [1722153555, 910897152.0], [1722153570, 910897152.0], [1722153585, 911876096.0], [1722153600, 911876096.0], [1722153615, 927731712.0], [1722153630, 927731712.0], [1722153645, 927825920.0], [1722153660, 927825920.0], [1722153675, 927928320.0], [1722153690, 927928320.0], [1722153705, 927928320.0], [1722153720, 927928320.0], [1722153735, 929501184.0]]",
+        "[[1722153345, 562881340.0], [1722153360, 562881340.0], [1722153375, 562936276.0], [1722153390, 562936276.0], [1722153405, 562967014.0], [1722153420, 562967014.0], [1722153435, 563022854.0], [1722153450, 563022854.0], [1722153465, 563052765.0], [1722153480, 563052765.0], [1722153495, 563110526.0], [1722153510, 563110526.0], [1722153525, 563147024.0], [1722153540, 563147024.0], [1722153555, 563202307.0], [1722153570, 563202307.0], [1722153585, 563232789.0], [1722153600, 563232789.0], [1722153615, 563291021.0], [1722153630, 563291021.0], [1722153645, 563320988.0], [1722153660, 563320988.0], [1722153675, 563375605.0], [1722153690, 563375605.0], [1722153705, 563405360.0], [1722153720, 563405360.0], [1722153735, 563467016.0]]",
+        "[[1722153345, 2657240576.0], [1722153360, 2657240576.0], [1722153375, 2657461685.0], [1722153390, 2657461685.0], [1722153405, 2657677015.0], [1722153420, 2657677015.0], [1722153435, 2657898676.0], [1722153450, 2657898676.0], [1722153465, 2658113621.0], [1722153480, 2658113621.0], [1722153495, 2658335718.0], [1722153510, 2658335718.0], [1722153525, 2658588940.0], [1722153540, 2658588940.0], [1722153555, 2658810235.0], [1722153570, 2658810235.0], [1722153585, 2659041315.0], [1722153600, 2659041315.0], [1722153615, 2659281437.0], [1722153630, 2659281437.0], [1722153645, 2659496445.0], [1722153660, 2659496445.0], [1722153675, 2659717075.0], [1722153690, 2659717075.0], [1722153705, 2659931861.0], [1722153720, 2659931861.0], [1722153735, 2660155242.0]]",
+        "[[1722153762, 0.0], [1722153777, 0.0], [1722153792, 0.0], [1722153807, 0.0], [1722153822, 0.0], [1722153837, 0.0], [1722153852, 0.0], [1722153867, 0.0], [1722153882, 0.0], [1722153897, 0.0], [1722153912, 0.0], [1722153927, 0.0], [1722153942, 0.0], [1722153957, 0.0], [1722153972, 0.0], [1722153987, 0.0], [1722154002, 0.0], [1722154017, 0.0], [1722154032, 0.0], [1722154047, 0.0], [1722154062, 0.0], [1722154077, 0.0], [1722154092, 0.0], [1722154107, 0.0], [1722154137, 0.0]]",
+        "[[1722153762, 270336.0], [1722153777, 270336.0], [1722153792, 270336.0], [1722153807, 270336.0], [1722153822, 270336.0], [1722153837, 270336.0], [1722153852, 270336.0], [1722153867, 270336.0], [1722153882, 270336.0], [1722153897, 270336.0], [1722153912, 270336.0], [1722153927, 270336.0], [1722153942, 270336.0], [1722153957, 270336.0], [1722153972, 270336.0], [1722153987, 270336.0], [1722154002, 270336.0], [1722154017, 270336.0], [1722154032, 270336.0], [1722154047, 270336.0], [1722154062, 270336.0], [1722154077, 270336.0], [1722154092, 270336.0], [1722154107, 270336.0], [1722154122, 270336.0], [1722154137, 270336.0], [1722154152, 270336.0]]",
+        "[[1722153762, 3351552.0], [1722153777, 3351552.0], [1722153792, 3351552.0], [1722153807, 3351552.0], [1722153822, 3351552.0], [1722153837, 3351552.0], [1722153852, 3351552.0], [1722153867, 3351552.0], [1722153882, 3351552.0], [1722153897, 3351552.0], [1722153912, 3351552.0], [1722153927, 3351552.0], [1722153942, 3351552.0], [1722153957, 3351552.0], [1722153972, 3351552.0], [1722153987, 3351552.0], [1722154002, 3351552.0], [1722154017, 3351552.0], [1722154032, 3351552.0], [1722154047, 3351552.0], [1722154062, 3351552.0], [1722154077, 3351552.0], [1722154092, 3351552.0], [1722154107, 3351552.0], [1722154122, 3351552.0], [1722154137, 3351552.0], [1722154152, 3351552.0]]",
+        "[[1722153762, 929677312.0], [1722153777, 929677312.0], [1722153792, 930000896.0], [1722153807, 930000896.0], [1722153822, 930000896.0], [1722153837, 930000896.0], [1722153852, 930017280.0], [1722153867, 930017280.0], [1722153882, 931344384.0], [1722153897, 931344384.0], [1722153912, 931389440.0], [1722153927, 931389440.0], [1722153942, 931430400.0], [1722153957, 931430400.0], [1722153972, 931516416.0], [1722153987, 931516416.0], [1722154002, 931516416.0], [1722154017, 931516416.0], [1722154032, 931602432.0], [1722154047, 931602432.0], [1722154062, 931688448.0], [1722154077, 931688448.0], [1722154092, 931774464.0], [1722154107, 931774464.0], [1722154122, 933101568.0], [1722154137, 933101568.0], [1722154152, 933470208.0]]",
+        "[[1722153762, 563496774.0], [1722153777, 563496774.0], [1722153792, 563551504.0], [1722153807, 563551504.0], [1722153822, 563582019.0], [1722153837, 563582019.0], [1722153852, 563636308.0], [1722153867, 563636308.0], [1722153882, 563667021.0], [1722153897, 563667021.0], [1722153912, 563726293.0], [1722153927, 563726293.0], [1722153942, 563756910.0], [1722153957, 563756910.0], [1722153972, 563811920.0], [1722153987, 563811920.0], [1722154002, 563842048.0], [1722154017, 563842048.0], [1722154032, 563900373.0], [1722154047, 563900373.0], [1722154062, 563929660.0], [1722154077, 563929660.0], [1722154092, 563985599.0], [1722154107, 563985599.0], [1722154122, 564022028.0], [1722154137, 564022028.0], [1722154152, 564076184.0]]",
+        "[[1722153762, 2660369865.0], [1722153777, 2660369865.0], [1722153792, 2660590782.0], [1722153807, 2660590782.0], [1722153822, 2660840482.0], [1722153837, 2660840482.0], [1722153852, 2661060718.0], [1722153867, 2661060718.0], [1722153882, 2661291716.0], [1722153897, 2661291716.0], [1722153912, 2661532946.0], [1722153927, 2661532946.0], [1722153942, 2661748901.0], [1722153957, 2661748901.0], [1722153972, 2661969983.0], [1722153987, 2661969983.0], [1722154002, 2662185271.0], [1722154017, 2662185271.0], [1722154032, 2662407184.0], [1722154047, 2662407184.0], [1722154062, 2662620408.0], [1722154077, 2662620408.0], [1722154092, 2662839435.0], [1722154107, 2662839435.0], [1722154122, 2663091719.0], [1722154137, 2663091719.0], [1722154152, 2663311658.0]]",
+    ]
+}
 
-    def chapter_title(self, title):
-        self.set_font('Arial', 'B', 12)
-        self.cell(0, 10, title, 0, 1, 'L')
-        self.ln(10)
+# Create DataFrame
+df = pd.DataFrame(data)
 
-    def chapter_body(self, body):
-        self.set_font('Arial', '', 10)
-        self.multi_cell(0, 10, body)
-        self.ln()
+# Function to parse and aggregate data for each block number
+def aggregate_metrics(df, witness_files):
+    # Initialize a list to store aggregated results
+    aggregated_data = []
 
-    def add_table(self, data):
-        self.set_font('Arial', 'B', 10)
-        col_widths = [30, 45, 45, 30, 25, 35, 35]  # Adjust these widths as needed
-        headers = ['Block Number', 'Start Time', 'End Time', 'Duration (s)', 'Max CPU', 'Max Memory', 'Transaction Count']
-        
-        for i, header in enumerate(headers):
-            self.cell(col_widths[i], 10, header, 1, 0, 'C')
-        self.ln()
-        
-        self.set_font('Arial', '', 10)
-        for row in data:
-            for i, item in enumerate(row):
-                self.cell(col_widths[i], 10, str(item), 1)
-            self.ln()
+    # Function to get the number of transactions from witness files
+    def get_num_transactions(witness_file):
+        with open(witness_file, 'r') as file:
+            data = json.load(file)
+        return len(data[0]['block_trace']['txn_info'])
 
-def generate_report(witness_dir, metrics_csv):
-    import pandas as pd
-    import os
-    import glob
-    import json
+    # Function to get withdrawals from witness files
+    def get_withdrawals(witness_file):
+        with open(witness_file, 'r') as file:
+            data = json.load(file)
+        # Placeholder: replace with actual logic to extract withdrawals
+        return data[0]['withdrawals'] if 'withdrawals' in data[0] else 0
 
-    # Load metrics data
-    df = pd.read_csv(metrics_csv, names=['block_number', 'metric_name', 'data'])
+    # Group by block_number
+    grouped = df.groupby('block_number')
 
-    # Collect data for the report
-    report_data = []
-    witness_files = glob.glob(os.path.join(witness_dir, '*.witness.json'))
+    for block_number, group in grouped:
+        block_data = {
+            'block_number': block_number,
+            'num_transactions': None,  # Placeholder, replace with actual computation if available
+            'time_taken': None,  # Placeholder, replace with actual computation if available
+            'max_memory': None,
+            'max_cpu': None,
+            'withdrawals': None,  # Placeholder, replace with actual computation if available
+            'cost_per_proof': None  # Placeholder, replace with actual computation if available
+        }
 
-    for witness_file in witness_files:
-        block_number = os.path.basename(witness_file).replace('.witness.json', '')
-        block_df = df[df['block_number'] == int(block_number)]
-        if block_df.empty:
-            continue
-        
-        # Initialize variables for start_time, end_time, and max values
-        start_time = None
-        end_time = None
-        max_cpu = 0
-        max_memory = 0
+        # Get witness file corresponding to the block number
+        witness_file = next((file for file in witness_files if f'block_{block_number}' in file), None)
+        if witness_file:
+            block_data['num_transactions'] = get_num_transactions(witness_file)
+            block_data['withdrawals'] = get_withdrawals(witness_file)
 
-        for index, row in block_df.iterrows():
-            data = json.loads(row['data'])
-            if not data:
-                continue
+        # Iterate over each metric in the group
+        for _, row in group.iterrows():
+            metric_name = row['metric_name']
+            metric_data = ast.literal_eval(row['data'])
 
-            # Calculate start_time and end_time
-            if start_time is None or data[0][0] < start_time:
-                start_time = data[0][0]
-            if end_time is None or data[-1][0] > end_time:
-                end_time = data[-1][0]
+            # Calculate the required metrics
+            if metric_name == 'cpu_usage':
+                block_data['max_cpu'] = max([x[1] for x in metric_data])
+            elif metric_name == 'memory_usage':
+                block_data['max_memory'] = max([x[1] for x in metric_data])
 
-            # Update max values for CPU and memory
-            if row['metric_name'] == 'cpu_usage':
-                max_cpu = max(max_cpu, max(value[1] for value in data))
-            elif row['metric_name'] == 'memory_usage':
-                max_memory = max(max_memory, max(value[1] for value in data))
+            # Calculate time_taken by comparing the first and last timestamps
+            if block_data['time_taken'] is None:
+                block_data['time_taken'] = metric_data[-1][0] - metric_data[0][0]
 
-        # Convert start_time and end_time to datetime objects
-        start_time = datetime.utcfromtimestamp(start_time)
-        end_time = datetime.utcfromtimestamp(end_time)
-        duration = (end_time - start_time).total_seconds()
+        aggregated_data.append(block_data)
 
-        with open(witness_file, 'r') as f:
-            witness_data = json.load(f)
-            txn_count = len(witness_data[0]['block_trace']['txn_info'])
+    return pd.DataFrame(aggregated_data)
 
-        report_data.append([block_number, start_time, end_time, duration, max_cpu, max_memory, txn_count])
+# List witness files (replace with actual file paths)
+witness_files = glob.glob('/tmp/witnesses2/*.json')
 
-    # Generate PDF in landscape mode
-    pdf = PDF(orientation='L')
-    pdf.add_page()
-    pdf.add_table(report_data)
-    output_filename = f"perf_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
-    pdf.output(output_filename)
-    print(f"Report generated: {output_filename}")
+# Aggregate the metrics
+final_report_df = aggregate_metrics(df, witness_files)
+
+# Save to CSV
+final_report_df.to_csv('final_report.csv', index=False)
+
+print(final_report_df)
