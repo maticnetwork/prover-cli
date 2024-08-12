@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 from prover_cli.prometheus import test_prometheus_connection, fetch_prometheus_metrics
 from prover_cli.proof_processor import execute_task, process_proof, log_metrics_to_csv, log_error
 from prover_cli.setup_environment import setup_environment
-from prover_cli.plotting import plot_and_analyze
+from prover_cli.plotting import plot_metrics
 from prover_cli.report_generator import generate_report
 
 BUFFER_WAIT_TIME = 20
