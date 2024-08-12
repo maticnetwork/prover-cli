@@ -15,7 +15,6 @@ def test_prometheus_connection():
 
 def fetch_prometheus_metrics(start_time, end_time):
     queries = {
-        'cpu_usage': 'rate(container_cpu_user_seconds_total[30s]) * 100',
         'memory_usage': 'container_memory_usage_bytes',
     }
     

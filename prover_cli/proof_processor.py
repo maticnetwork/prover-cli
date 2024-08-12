@@ -56,13 +56,16 @@ def log_metrics_to_csv(witness_file, metrics):
     with open(csv_file_path, mode='a', newline='') as file:
         writer = csv.writer(file)
         if not file_exists:
-            writer.writerow(['block_number', 'metric_name', 'data'])
-            
+            writer.writerow(['block_number', 'pod_name', 'metric_name', 'data'])
+        
         for metric_name, metric_data in metrics:
             for metric in metric_data:
-                values = [[int(value[0]), float(value[1])] for value in metric['values']]
-            row = [starting_block, metric_name, json.dumps(values)]
-            writer.writerow(row)
+                # Filter for 'zk-evm-worker' pods
+                if 'pod' in metric['metric'] and 'zk-evm-worker' in metric['metric']['pod']:
+                    values = [[int(value[0]), float(value[1])] for value in metric['values']]
+                    pod_name = metric['metric']['pod']
+                    row = [starting_block, pod_name, metric_name, json.dumps(values)]
+                    writer.writerow(row)
 
 def log_error(witness_file, error_log):
     starting_block = os.path.basename(witness_file).replace('.witness.json', '')
