@@ -3,7 +3,6 @@ import json
 import os
 import subprocess
 from datetime import datetime
-from metrics_logger import log_metrics_to_csv
 
 def execute_task(witness_file, previous_proof=None):
     output_file = witness_file.replace('.witness.json', '.leader.out')
