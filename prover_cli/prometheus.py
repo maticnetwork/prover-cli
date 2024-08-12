@@ -47,5 +47,6 @@ if __name__ == "__main__":
     witness_file = "123.witness.json"
 
     metrics = fetch_prometheus_metrics(start_time, end_time)
+    print(metrics)
     log_metrics_to_csv(witness_file, metrics)
     print("Fetched metrics:", metrics)
