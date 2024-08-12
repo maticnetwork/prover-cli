@@ -36,7 +36,7 @@ def plot_metrics(csv_file, metric_name, block_number, save_dir='plots'):
         pod_data = filtered_df[filtered_df['pod_name'] == pod]
         plt.plot(pod_data['timestamp'], pod_data['value'], label=pod)
     
-    plt.title(f'{metric_name} Over Time for Block {block_number}')
+    plt.title(f'{metric_name} Proving Block {block_number}')
     plt.xlabel('Time')
     plt.ylabel(metric_name)
     plt.legend()
