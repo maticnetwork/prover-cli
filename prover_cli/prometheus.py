@@ -15,8 +15,8 @@ def test_prometheus_connection():
 
 def fetch_prometheus_metrics(start_time, end_time):
     queries = {
-        'memory_usage': 'container_memory_usage_bytes',
-        'cpu_usage': 'container_cpu_usage_seconds_total'
+        'memory_usage': 'container_memory_usage_bytes / (1073741824)', # memory use in GB
+        'cpu_usage': 'rate (container_cpu_usage_seconds_total{image!=""}[1m])' # percent of cpu usage
     }
     
     metrics = []
