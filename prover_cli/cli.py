@@ -99,7 +99,7 @@ def main():
     elif args.command == 'validate':
         validate_proof(args.input_file, args.output_file)
     elif args.command == 'plot':
-        plot_and_analyze(args.csv_file, args.metric_name, args.block_number)
+        plot_metrics(args.csv_file, args.metric_name, args.block_number)
     elif args.command == 'report':
         generate_final_report(args.witness_dir, args.metrics_csv)
 

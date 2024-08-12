@@ -1,42 +1,49 @@
-import matplotlib.pyplot as plt
 import pandas as pd
 import json
+import matplotlib.pyplot as plt
 from datetime import datetime
-import matplotlib.dates as mdates
+import os
+import argparse
 
-def plot_metrics(data, metric_name, block_number):
-    print("Data for plotting:", data)  # Debug statement
-    print(f"Filtering for block_number: {block_number}, metric_name: {metric_name}")  # Debug statement
+def plot_metrics(csv_file, metric_name, block_number, save_dir='plots'):
+    # Load the CSV data
+    df = pd.read_csv(csv_file)
+
+    # Convert the 'data' column from JSON strings to lists of tuples
+    df['data'] = df['data'].apply(lambda x: json.loads(x))
+
+    # Expand the 'data' column into separate rows
+    df_expanded = df.explode('data').reset_index(drop=True)
+
+    # Split the 'data' column into separate 'timestamp' and 'value' columns
+    df_expanded['timestamp'] = df_expanded['data'].apply(lambda x: x[0])
+    df_expanded['value'] = df_expanded['data'].apply(lambda x: x[1])
+
+    # Convert 'timestamp' from Unix time to datetime
+    df_expanded['timestamp'] = pd.to_datetime(df_expanded['timestamp'], unit='s')
+
+    # Drop the now-unnecessary 'data' column
+    df_expanded = df_expanded.drop(columns=['data'])
+
+    # Filter by block number and metric name
+    filtered_df = df_expanded[(df_expanded['block_number'] == block_number) & (df_expanded['metric_name'] == metric_name)]
+
+    # Ensure the save directory exists
+    os.makedirs(save_dir, exist_ok=True)
+
+    plt.figure(figsize=(12, 6))
+    for pod in filtered_df['pod_name'].unique():
+        pod_data = filtered_df[filtered_df['pod_name'] == pod]
+        plt.plot(pod_data['timestamp'], pod_data['value'], label=pod)
     
-    data['block_number'] = data['block_number'].astype(str)
-    subset = data[(data['block_number'] == str(block_number)) & (data['metric_name'] == metric_name)]
-    
-    if subset.empty:
-        print(f"No data found for block {block_number} and metric {metric_name}")
-        return
-
-    for index, row in subset.iterrows():
-        values = json.loads(row['data'])
-        timestamps = [datetime.utcfromtimestamp(value[0]) for value in values]
-        data_points = [value[1] for value in values]  # Keep values in raw form
-
-        plt.plot(timestamps, data_points, label=f"Block {block_number}")
-
-    plt.xlabel('Timestamp')
+    plt.title(f'{metric_name} Over Time for Block {block_number}')
+    plt.xlabel('Time')
     plt.ylabel(metric_name)
-    plt.title(f"{metric_name} over Time for Block {block_number}")
-    plt.xticks(rotation=45)
     plt.legend()
-    plt.gca().xaxis.set_major_locator(mdates.AutoDateLocator())
-    plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%m/%d/%Y %H:%M:%S'))
-
-    # Save the plot as an image
-    output_file = f"plot_{metric_name}_{block_number}.png"
-    plt.savefig(output_file, bbox_inches='tight')
-    print(f"Plot saved to {output_file}")
-
-def plot_and_analyze(csv_file, metric_name, block_number):
-    headers = ['block_number', 'metric_name', 'data']
-    data = pd.read_csv(csv_file, header=0, names=headers)
-    print("CSV data:", data)  # Debug statement
-    plot_metrics(data, metric_name, block_number)
+    plt.grid(True)
+    
+    # Save the plot as a file
+    filename = f'{save_dir}/{metric_name}_block_{block_number}.png'
+    plt.savefig(filename)
+    plt.close()
+    print(f'Plot saved as {filename}')
