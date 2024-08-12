@@ -1,5 +1,6 @@
 import requests
 from urllib.parse import urlencode
+from prover_cli.proof_processor import log_metrics_to_csv
 
 PROMETHEUS_URL = 'http://localhost:9090/api/v1/query_range'
 
@@ -11,14 +12,10 @@ def test_prometheus_connection():
         print("Error connecting to Prometheus:", e)
         exit(1)
 
-def fetch_prometheus_metrics(witness_file, start_time, end_time):
+def fetch_prometheus_metrics(start_time, end_time):
     queries = {
         'cpu_usage': 'rate(container_cpu_user_seconds_total[30s]) * 100',
         'memory_usage': 'container_memory_usage_bytes',
-        'disk_read': 'node_disk_read_bytes_total',
-        'disk_write': 'node_disk_written_bytes_total',
-        'network_receive': 'node_network_receive_bytes_total',
-        'network_transmit': 'node_network_transmit_bytes_total'
     }
     
     metrics = []
@@ -29,7 +26,7 @@ def fetch_prometheus_metrics(witness_file, start_time, end_time):
             'query': query,
             'start': start_str,
             'end': end_str,
-            'step': '15s'
+            'step': '5s'
         }
         url = PROMETHEUS_URL + '?' + urlencode(params)
         response = requests.get(url)
@@ -38,19 +35,16 @@ def fetch_prometheus_metrics(witness_file, start_time, end_time):
         metrics.append((name, data['data']['result']))
     
     return metrics
-
-def log_metrics_to_csv(witness_file, metrics):
-    import csv
-    import os
-    from datetime import datetime
     
-    starting_block = os.path.basename(witness_file).replace('.witness.json', '')
-    with open('metrics.csv', mode='a', newline='') as file:
-        writer = csv.writer(file)
-        for metric_name, metric_data in metrics:
-            row = [starting_block, datetime.now(), metric_name]
-            for metric in metric_data:
-                values = [value[1] for value in metric['values']]
-                row.extend(values)
-            writer.writerow(row)
+if __name__ == "__main__":
+    test_prometheus_connection()
+    # Set the time range for the query
+    end_time = datetime.utcnow()
+    start_time = end_time - timedelta(minutes=10)
+    
+    # Simulate a witness file name for testing
+    witness_file = "123.witness.json"
 
+    metrics = fetch_prometheus_metrics(start_time, end_time)
+    log_metrics_to_csv(witness_file, metrics)
+    print("Fetched metrics:", metrics)

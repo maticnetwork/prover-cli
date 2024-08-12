@@ -1,8 +1,9 @@
-import subprocess
+import csv
 import json
 import os
+import subprocess
 from datetime import datetime
-import csv
+from metrics_logger import log_metrics_to_csv
 
 def execute_task(witness_file, previous_proof=None):
     output_file = witness_file.replace('.witness.json', '.leader.out')
@@ -46,26 +47,11 @@ def process_proof(witness_file):
     except (subprocess.CalledProcessError, json.JSONDecodeError) as e:
         print(f"Failed to process proof: {e}")
         return None
-        
-def log_metrics_to_csv(witness_file, metrics, start_time, end_time):
-    starting_block = os.path.basename(witness_file).replace('.witness.json', '')
-    csv_file_path = 'metrics.csv'
-    file_exists = os.path.isfile(csv_file_path)
-    
-    with open(csv_file_path, mode='a', newline='') as file:
-        writer = csv.writer(file)
-        if not file_exists:
-            writer.writerow(['block number', 'metric name', 'start_time', 'end_time', 'data point values'])
-        
-        for metric in metrics:
-            metric_name = metric.get('metric', {}).get('job', 'unknown_metric')
-            values = [[value[0], value[1]] for value in metric.get('values', [])]
-            row = [starting_block, metric_name, start_time.isoformat(), end_time.isoformat(), json.dumps(values)]
-            writer.writerow(row)
 
 def log_metrics_to_csv(witness_file, metrics):
     starting_block = os.path.basename(witness_file).replace('.witness.json', '')
-    csv_file_path = 'metrics.csv'
+    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+    csv_file_path = f'metrics_{timestamp}.csv'
     file_exists = os.path.isfile(csv_file_path)
     
     with open(csv_file_path, mode='a', newline='') as file:

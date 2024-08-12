@@ -38,7 +38,7 @@ def run_proofs(begin_block, end_block, witness_dir, previous_proof):
         end_time = datetime.utcnow()
 
         # Fetch Prometheus metrics
-        metrics = fetch_prometheus_metrics(current_witness, start_time, end_time)
+        metrics = fetch_prometheus_metrics(start_time, end_time)
 
         # Log metrics to CSV
         log_metrics_to_csv(current_witness, metrics)
