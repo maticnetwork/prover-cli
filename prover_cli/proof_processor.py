@@ -9,11 +9,11 @@ def execute_task(witness_file, previous_proof=None):
     
     if previous_proof:
         command = f"""
-        env RUST_BACKTRACE=full RUST_LOG=debug leader --runtime=amqp --amqp-uri=amqp://guest:guest@test-rabbitmq-cluster.zk-evm.svc.cluster.local:5672 stdio --previous-proof {previous_proof} < {witness_file} | tee {output_file}
+        env RUST_BACKTRACE=full RUST_LOG=info leader --runtime=amqp --amqp-uri=amqp://guest:guest@rabbitmq-cluster.zk-evm.svc.cluster.local:5672 stdio --previous-proof {previous_proof} < {witness_file} | tee {output_file}
         """
     else:
         command = f"""
-        env RUST_BACKTRACE=full RUST_LOG=debug leader --runtime=amqp --amqp-uri=amqp://guest:guest@test-rabbitmq-cluster.zk-evm.svc.cluster.local:5672 stdio < {witness_file} | tee {output_file}
+        env RUST_BACKTRACE=full RUST_LOG=debug leader --runtime=amqp --amqp-uri=amqp://guest:guest@rabbitmq-cluster.zk-evm.svc.cluster.local:5672 stdio < {witness_file} | tee {output_file}
         """
     
     print(f"Executing command: {command}")
