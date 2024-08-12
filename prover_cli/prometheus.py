@@ -36,17 +36,3 @@ def fetch_prometheus_metrics(start_time, end_time):
         metrics.append((name, data['data']['result']))
     
     return metrics
-    
-if __name__ == "__main__":
-    test_prometheus_connection()
-    # Set the time range for the query
-    end_time = datetime.utcnow()
-    start_time = end_time - timedelta(minutes=10)
-    
-    # Simulate a witness file name for testing
-    witness_file = "123.witness.json"
-
-    metrics = fetch_prometheus_metrics(start_time, end_time)
-    print(metrics)
-    log_metrics_to_csv(witness_file, metrics)
-    print("Fetched metrics:", metrics)
