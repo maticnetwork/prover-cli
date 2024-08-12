@@ -16,6 +16,7 @@ def test_prometheus_connection():
 def fetch_prometheus_metrics(start_time, end_time):
     queries = {
         'memory_usage': 'container_memory_usage_bytes',
+        'cpu_usage': 'node_cpu_seconds_total'
     }
     
     metrics = []
