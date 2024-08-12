@@ -60,8 +60,12 @@ def log_metrics_to_csv(witness_file, metrics):
         
         for metric_name, metric_data in metrics:
             for metric in metric_data:
-                # Filter for 'zk-evm-worker' pods
-                if 'pod' in metric['metric'] and 'zk-evm-worker' in metric['metric']['pod']:
+                # Filter for 'zk-evm-worker' pods with the specified image
+                if (
+                    'pod' in metric['metric'] 
+                    and 'zk-evm-worker' in metric['metric']['pod']
+                    and metric['metric'].get('image') == 'docker.io/leovct/zk_evm:v0.6.0'
+                ):
                     values = [[int(value[0]), float(value[1])] for value in metric['values']]
                     pod_name = metric['metric']['pod']
                     row = [starting_block, pod_name, metric_name, json.dumps(values)]
