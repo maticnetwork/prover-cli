@@ -1,5 +1,4 @@
 import pandas as pd
-import datetime
 import ast
 import glob
 import json
@@ -77,7 +76,8 @@ def generate_report(witness_dir, metrics_csv_path):
 
             # Calculate cost per proof
             if block_data['time_taken'] is not None:
-                cost_per_second = 1221.28 / (30 * 24 * 60 * 60)
+                 # 1221 is monthly cost of single t2d-standard-60 highmem node
+                cost_per_second = 1221 / (30 * 24 * 60 * 60)
                 block_data['cost_per_proof'] = block_data['time_taken'] * cost_per_second
 
             aggregated_data.append(block_data)
@@ -90,9 +90,8 @@ def generate_report(witness_dir, metrics_csv_path):
     # Aggregate the metrics
     final_report_df = aggregate_metrics(df, witness_files)
     
-    timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
     # Create the output CSV path with the timestamp
-    output_csv_path = os.path.join(os.path.dirname(metrics_csv_path), f"performance_report_{timestamp}.csv")
+    output_csv_path = os.path.join(os.path.dirname(metrics_csv_path), f"performance_report_{metrics_csv_path.split("metrics_")[1]}")
 
     # Save to CSV
     final_report_df.to_csv(output_csv_path, index=False)

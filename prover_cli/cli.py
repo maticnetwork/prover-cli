@@ -40,17 +40,19 @@ def run_proofs(begin_block, end_block, witness_dir, previous_proof):
         time.sleep(BUFFER_WAIT_TIME)
         end_time = datetime.utcnow()
 
-        # Fetch Prometheus metrics
         metrics = fetch_prometheus_metrics(start_time, end_time)
 
-        # Log metrics to CSV
         log_metrics_to_csv(current_witness, metrics, csv_file_path)
 
-        # Log errors if any
         if error:
             log_error(current_witness, error)
+            
+    # Auto-gen all metric visualizations, by metric_name and block_number
+    for current_block in range(begin_block, end_block + 1):
+        for metric_name in ["cpu_usage", "memory_usage"]:
+            plot_metrics(csv_file_path, metric_name, current_block)
         
-    # Auto-gen report at end of each run
+    # Auto-gen final performance report detailing avg/max cpu/mem for each block proof
     generate_report(witness_dir, csv_file_path)
 
 def validate_proof(input_file, output_file):
