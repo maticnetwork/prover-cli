@@ -20,6 +20,7 @@ def run_proofs(begin_block, end_block, witness_dir, previous_proof):
 
     for current_block in range(begin_block, end_block + 1):
         current_witness = os.path.join(witness_dir, f"{current_block}.witness.json")
+        previous_proof = os.path.join(witness_dir, f"{current_block - 1}.proof.json")
         print(f"Starting task with witness file {current_witness}")
 
         # Determine the time range for metrics collection for each block

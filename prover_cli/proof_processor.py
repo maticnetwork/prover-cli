@@ -30,22 +30,37 @@ def execute_task(witness_file, previous_proof=None):
 
 def process_proof(witness_file):
     output_file = witness_file.replace('.witness.json', '.leader.out')
+    proof_sequence_file = witness_file.replace('.witness.json', '.proof.sequence')
     proof_file = witness_file.replace('.witness.json', '.proof.json')
     
-    command = f"tail -n1 {output_file} | jq '.'"
-    try:
-        result = subprocess.run(['sh', '-c', command], capture_output=True, text=True)
-        if result.returncode != 0:
-            print(f"Failed to process proof: {result.stderr}")
-            return None
-        else:
-            proof_json = json.loads(result.stdout)
-            with open(proof_file, 'w') as pf:
-                json.dump(proof_json, pf, indent=2)
-            return proof_file
-    except (subprocess.CalledProcessError, json.JSONDecodeError) as e:
-        print(f"Failed to process proof: {e}")
+    # Validate the JSON structure
+    validate_command = f"tail -n1 {output_file} | jq empty"
+    validate_result = subprocess.run(['sh', '-c', validate_command], capture_output=True, text=True)
+    if validate_result.returncode != 0:
+        print(f"Failed to validate proof: {validate_result.stderr}")
         return None
+
+    # Save the entire JSON content to .proof.sequence
+    sequence_command = f"tail -n1 {output_file} | jq '.'"
+    sequence_result = subprocess.run(['sh', '-c', sequence_command], capture_output=True, text=True)
+    if sequence_result.returncode != 0:
+        print(f"Failed to process proof sequence: {sequence_result.stderr}")
+        return None
+    else:
+        with open(proof_sequence_file, 'w') as psf:
+            psf.write(sequence_result.stdout)
+    
+    # Extract the first element of the JSON array and save to .proof
+    proof_command = f"tail -n1 {output_file} | jq '.[0]'"
+    proof_result = subprocess.run(['sh', '-c', proof_command], capture_output=True, text=True)
+    if proof_result.returncode != 0:
+        print(f"Failed to extract proof: {proof_result.stderr}")
+        return None
+    else:
+        with open(proof_file, 'w') as pf:
+            pf.write(proof_result.stdout)
+    
+    return proof_file
 
 def log_metrics_to_csv(witness_file, metrics, csv_file_path):
     starting_block = os.path.basename(witness_file).replace('.witness.json', '')
