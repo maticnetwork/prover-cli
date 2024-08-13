@@ -31,10 +31,10 @@ def run_proofs(begin_block, end_block, witness_dir, previous_proof):
 
         # Check if command was executed successfully
         if output:
-            print(f"Task with witness file {current_witness} executed successfully.")
+            print(f"Task with witness file {current_witness} executed successfully ✅")
             proof_file = process_proof(current_witness)
         else:
-            print(f"Task with witness file {current_witness} failed to execute.")
+            print(f"Task with witness file {current_witness} failed to execute ❌")
 
         # Wait for metrics to land
         time.sleep(BUFFER_WAIT_TIME)
@@ -49,8 +49,6 @@ def run_proofs(begin_block, end_block, witness_dir, previous_proof):
         # Log errors if any
         if error:
             log_error(current_witness, error)
-
-        print(f"Completed task with witness file {current_witness}")
         
     # Auto-gen report at end of each run
     generate_report(witness_dir, csv_file_path)
