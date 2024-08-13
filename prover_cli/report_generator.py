@@ -91,7 +91,7 @@ def generate_report(witness_dir, metrics_csv_path):
     final_report_df = aggregate_metrics(df, witness_files)
     
     # Create the output CSV path with the timestamp
-    output_csv_path = os.path.join(os.path.dirname(metrics_csv_path), f"performance_report_{metrics_csv_path.split("metrics_")[1]}")
+    output_csv_path = os.path.join(os.path.dirname(metrics_csv_path), f"performance_report_{metrics_csv_path.split('metrics_')[1]}")
 
     # Save to CSV
     final_report_df.to_csv(output_csv_path, index=False)
