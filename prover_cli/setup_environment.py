@@ -14,4 +14,3 @@ def setup_environment():
                 print(f"Setup command error: {result.stderr}")
         except subprocess.CalledProcessError as e:
             print(f"Setup command failed with error: {e.stderr}")
-

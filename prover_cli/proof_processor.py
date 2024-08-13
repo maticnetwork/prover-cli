@@ -47,10 +47,8 @@ def process_proof(witness_file):
         print(f"Failed to process proof: {e}")
         return None
 
-def log_metrics_to_csv(witness_file, metrics):
+def log_metrics_to_csv(witness_file, metrics, csv_file_path):
     starting_block = os.path.basename(witness_file).replace('.witness.json', '')
-    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-    csv_file_path = f'metrics_{timestamp}.csv'
     file_exists = os.path.isfile(csv_file_path)
     
     with open(csv_file_path, mode='a', newline='') as file:
@@ -70,8 +68,6 @@ def log_metrics_to_csv(witness_file, metrics):
                     pod_name = metric['metric']['pod']
                     row = [starting_block, pod_name, metric_name, json.dumps(values)]
                     writer.writerow(row)
-    
-    return csv_file_path
 
 def log_error(witness_file, error_log):
     starting_block = os.path.basename(witness_file).replace('.witness.json', '')
@@ -91,4 +87,3 @@ def validate_and_extract_proof(raw_json):
     except (json.JSONDecodeError, KeyError, IndexError) as e:
         print(f"Failed to decode JSON: {e}")
         return None
-

@@ -14,6 +14,9 @@ BUFFER_WAIT_TIME = 35  # seconds
 def run_proofs(begin_block, end_block, witness_dir, previous_proof):
     test_prometheus_connection()
     setup_environment()
+    
+    job_start_timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+    csv_file_path = f'metrics_{job_start_timestamp}.csv'
 
     for current_block in range(begin_block, end_block + 1):
         current_witness = os.path.join(witness_dir, f"{current_block}.witness.json")
@@ -41,16 +44,16 @@ def run_proofs(begin_block, end_block, witness_dir, previous_proof):
         metrics = fetch_prometheus_metrics(start_time, end_time)
 
         # Log metrics to CSV
-        csv_path = log_metrics_to_csv(current_witness, metrics)
-        
-        # Auto-gen report at end of each run
-        generate_report(witness_dir, csv_path)
+        log_metrics_to_csv(current_witness, metrics, csv_file_path)
 
         # Log errors if any
         if error:
             log_error(current_witness, error)
 
         print(f"Completed task with witness file {current_witness}")
+        
+    # Auto-gen report at end of each run
+    generate_report(witness_dir, csv_file_path)
 
 def validate_proof(input_file, output_file):
     try:
