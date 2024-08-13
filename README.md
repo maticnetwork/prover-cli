@@ -19,13 +19,14 @@ Prover-CLI is a command-line tool for processing and validating blockchain proof
 - pip install -r requirements && pip install -e .
 
 
+## Required Auth Setup
+
+- gcloud auth login
+- gcloud container clusters get-credentials <your_cluster> --region=europe-west3
+- screen -dmS prometheus-port-forward bash -c 'kubectl port-forward --namespace kube-prometheus --address localhost svc/prometheus-operated 9090:9090'
+
+
 # Usage
-
-## Set Up Port Forwarding
-Before running the CLI, set up port forwarding for Prometheus for metric tracking:
-
-nohup kubectl port-forward --namespace kube-prometheus --address localhost svc/prometheus-operated 9090:9090 &
-
 
 ## Prove Range of Witnesses
 
@@ -48,9 +49,14 @@ prover-cli report --witness_dir /tmp/prover_cli --metrics_csv /tmp/prover_cli/me
 
 
 ## Review Metrics
-Performance metrics are saved in metrics.csv in the current directory. Each row contains a unique metric
-tagged by witness id
+CPU and memory metrics, per worker pod, are saved in metrics_{timestamp}.csv in the current directory. Each row contains a unique metric tagged by witness id
 
+## Performance Report
+A per witness summary performance report is auto-generated after each job, found at performance_report_{timestamp}.csv, detailing the avg and max CPU/memory used to prove each witness id
+
+## Plots
+A series of matplotlib visuals are auto-generated after each run, depicting the timeseries change of 
+CPU/memory per witness id, per worker
 
 ## Contributing
 Contributions are welcome! Please open an issue or submit a pull request on GitHub.
