@@ -12,11 +12,11 @@ Prover-CLI is a command-line tool for processing and validating blockchain proof
 
 ## Installation
 
-git clone https://github.com/rebelArtists/prover_cli.git
-cd prover_cli
-python3 -m venv venv
-source venv/bin/activate
-pip install -r requirements && pip install -e .
+- git clone https://github.com/rebelArtists/prover_cli.git
+- cd prover_cli
+- python3 -m venv venv
+- source venv/bin/activate
+- pip install -r requirements && pip install -e .
 
 
 # Usage
@@ -39,7 +39,7 @@ prover-cli validate --input_file /path/to/leader.out --output_file /path/to/clea
 
 ## Plot Prover Metrics
 
-prover-cli plot --csv_file metrics.csv --metric_name network_transmit --block_number 123
+prover-cli plot --csv_file metrics.csv --metric_name memory_usage --block_number 123
 
 
 ## Creating Final Performance Report

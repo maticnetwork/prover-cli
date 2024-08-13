@@ -1,7 +1,6 @@
 import requests
 from datetime import datetime, timedelta
 from urllib.parse import urlencode
-from prover_cli.proof_processor import log_metrics_to_csv
 
 PROMETHEUS_URL = 'http://localhost:9090/api/v1/query_range'
 

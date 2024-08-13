@@ -70,6 +70,8 @@ def log_metrics_to_csv(witness_file, metrics):
                     pod_name = metric['metric']['pod']
                     row = [starting_block, pod_name, metric_name, json.dumps(values)]
                     writer.writerow(row)
+    
+    return csv_file_path
 
 def log_error(witness_file, error_log):
     starting_block = os.path.basename(witness_file).replace('.witness.json', '')

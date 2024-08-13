@@ -9,7 +9,7 @@ from prover_cli.setup_environment import setup_environment
 from prover_cli.plotting import plot_metrics
 from prover_cli.report_generator import generate_report
 
-BUFFER_WAIT_TIME = 20
+BUFFER_WAIT_TIME = 35  # seconds
 
 def run_proofs(begin_block, end_block, witness_dir, previous_proof):
     test_prometheus_connection()
@@ -41,16 +41,16 @@ def run_proofs(begin_block, end_block, witness_dir, previous_proof):
         metrics = fetch_prometheus_metrics(start_time, end_time)
 
         # Log metrics to CSV
-        log_metrics_to_csv(current_witness, metrics)
+        csv_path = log_metrics_to_csv(current_witness, metrics)
+        
+        # Auto-gen report at end of each run
+        generate_report(witness_dir, csv_path)
 
         # Log errors if any
         if error:
             log_error(current_witness, error)
 
         print(f"Completed task with witness file {current_witness}")
-
-        # Cool-down period
-        time.sleep(BUFFER_WAIT_TIME)
 
 def validate_proof(input_file, output_file):
     try:
@@ -65,9 +65,6 @@ def validate_proof(input_file, output_file):
             print(f"Failed to validate and extract proof from {input_file}")
     except Exception as e:
         print(f"Failed to validate and extract proof: {e}")
-
-def generate_final_report(witness_dir, metrics_csv):
-    generate_report(witness_dir, metrics_csv)
 
 def main():
     parser = argparse.ArgumentParser(description='Prover CLI')
@@ -101,7 +98,7 @@ def main():
     elif args.command == 'plot':
         plot_metrics(args.csv_file, args.metric_name, args.block_number)
     elif args.command == 'report':
-        generate_final_report(args.witness_dir, args.metrics_csv)
+        generate_report(args.witness_dir, args.metrics_csv)
 
 if __name__ == "__main__":
     main()

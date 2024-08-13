@@ -37,8 +37,16 @@ def plot_metrics(csv_file, metric_name, block_number, save_dir='plots'):
         plt.plot(pod_data['timestamp'], pod_data['value'], label=pod)
     
     plt.title(f'{metric_name} Proving Block {block_number}')
-    plt.xlabel('Time')
-    plt.ylabel(metric_name)
+    plt.xlabel('Time (UTC)')
+    
+    # Dynamically adjust y-axis label based on metric_name
+    ylabel = metric_name
+    if metric_name == "cpu_usage":
+        ylabel += " (%)"
+    elif metric_name == "memory_usage":
+        ylabel += " (GB)"
+    plt.ylabel(ylabel)
+    
     plt.legend()
     plt.grid(True)
     
