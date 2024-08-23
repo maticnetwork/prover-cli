@@ -66,7 +66,12 @@ def log_metrics_to_csv(witness_file, metrics, csv_file_path):
     starting_block = os.path.basename(witness_file).replace('.witness.json', '')
     file_exists = os.path.isfile(csv_file_path)
     
-    with open(csv_file_path, mode='a', newline='') as file:
+    # Ensure the save directory exists
+    save_dir = "metrics"
+    os.makedirs(save_dir, exist_ok=True)
+    metrics_path = f"{save_dir}/{csv_file_path}"
+    
+    with open(metrics_path, mode='a', newline='') as file:
         writer = csv.writer(file)
         if not file_exists:
             writer.writerow(['block_number', 'pod_name', 'metric_name', 'data'])
