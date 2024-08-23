@@ -7,7 +7,7 @@ import argparse
 
 def plot_metrics(csv_file, metric_name, block_number, save_dir='plots'):
     # Load the CSV data
-    df = pd.read_csv(csv_file)
+    df = pd.read_csv(f'{metrics}/{csv_file}')
 
     # Convert the 'data' column from JSON strings to lists of tuples
     df['data'] = df['data'].apply(lambda x: json.loads(x))

@@ -2,8 +2,7 @@ import subprocess
 
 def setup_environment():
     commands = [
-        'mkdir -p /tmp/proofs',
-        'mkdir -p /tmp/witnesses'
+        'mkdir -p proofs error_logs',
     ]
 
     for command in commands:

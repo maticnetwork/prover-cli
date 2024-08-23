@@ -91,7 +91,7 @@ def log_metrics_to_csv(witness_file, metrics, csv_file_path):
 
 def log_error(witness_file, error_log):
     starting_block = os.path.basename(witness_file).replace('.witness.json', '')
-    with open(f'error_{starting_block}.log', mode='w') as file:
+    with open(f'{errors_logs}/error_{starting_block}.log', mode='w') as file:
         file.write(error_log)
 
 def validate_and_extract_proof(raw_json):
