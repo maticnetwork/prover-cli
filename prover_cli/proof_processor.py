@@ -54,7 +54,7 @@ def process_proof(witness_file):
         print(f"Failed to extract proof: {proof_result.stderr}")
         return None
     else:
-        with open(f'proofs/{proof_file}', 'w') as pf:
+        with open(f'proofs/{proof_file.split("/")[1]}', 'w') as pf:
             pf.write(proof_result.stdout)
             
     # If everything was successful, delete the .leader.out file
