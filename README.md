@@ -3,7 +3,7 @@
 
 Prover-CLI is a command-line tool for processing and validating blockchain proofs.
 
-## General Prerequisites
+## General Prerequisites 
 
 - Python 3.6+
 - Prometheus set up and running on your service
