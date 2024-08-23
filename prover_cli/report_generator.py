@@ -6,7 +6,7 @@ import os
 
 def generate_report(witness_dir, metrics_csv_path):
     # Ensure metrics_csv_path is a file and not a directory
-    if not os.path.isfile(f'metrics/{metrics_csv_path}'):
+    if not os.path.isfile(metrics_csv_path):
         raise ValueError(f"The metrics_csv_path provided is not a file: {metrics_csv_path}")
 
     # Read the metrics CSV file

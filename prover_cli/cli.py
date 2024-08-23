@@ -54,7 +54,7 @@ def run_proofs(begin_block, end_block, witness_dir, previous_proof):
             plot_metrics(csv_file_path, metric_name, current_block)
         
     # Auto-gen final performance report detailing avg/max cpu/mem for each block proof
-    generate_report(witness_dir, csv_file_path)
+    generate_report(witness_dir, f"metrics/{csv_file_path}")
 
 def validate_proof(input_file, output_file):
     try:
