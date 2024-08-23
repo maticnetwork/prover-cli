@@ -46,9 +46,6 @@ def process_proof(witness_file):
     if sequence_result.returncode != 0:
         print(f"Failed to process proof sequence: {sequence_result.stderr}")
         return None
-    else:
-        with open(proof_sequence_file, 'w') as psf:
-            psf.write(sequence_result.stdout)
     
     # Extract the first element of the JSON array and save to .proof
     proof_command = f"tail -n1 {output_file} | jq '.[0]'"
@@ -57,8 +54,15 @@ def process_proof(witness_file):
         print(f"Failed to extract proof: {proof_result.stderr}")
         return None
     else:
-        with open(proof_file, 'w') as pf:
+        with open(f'proofs/{proof_file}', 'w') as pf:
             pf.write(proof_result.stdout)
+            
+    # If everything was successful, delete the .leader.out file
+    try:
+        os.remove(output_file)
+        print(f"Deleted {output_file} successfully.")
+    except OSError as e:
+        print(f"Error deleting {output_file}: {e.strerror}")
     
     return proof_file
 
